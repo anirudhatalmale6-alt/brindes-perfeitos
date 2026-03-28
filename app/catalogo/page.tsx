@@ -31,13 +31,12 @@ function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSupplier, setSelectedSupplier] = useState('');
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({
       page: String(page), limit: '24', search, active: '1',
-      category: selectedCategory, supplier: selectedSupplier,
+      category: selectedCategory,
     });
     if (searchParams.get('featured') === '1') params.set('featured', '1');
 
@@ -46,7 +45,7 @@ function CatalogPage() {
     setProducts(data.products);
     setTotal(data.total);
     setLoading(false);
-  }, [page, search, selectedCategory, selectedSupplier, searchParams]);
+  }, [page, search, selectedCategory, searchParams]);
 
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(setCategories);
@@ -93,20 +92,8 @@ function CatalogPage() {
                   </select>
                 </div>
 
-                {/* Supplier */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Fornecedor</h4>
-                  <select value={selectedSupplier} onChange={e => { setSelectedSupplier(e.target.value); setPage(1); }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                    <option value="">Todos</option>
-                    <option value="spotgifts">SpotGifts</option>
-                    <option value="xbzbrindes">XBZ Brindes</option>
-                    <option value="manual">Manual</option>
-                  </select>
-                </div>
-
-                {(search || selectedCategory || selectedSupplier) && (
-                  <button onClick={() => { setSearch(''); setSelectedCategory(''); setSelectedSupplier(''); setPage(1); }}
+                {(search || selectedCategory) && (
+                  <button onClick={() => { setSearch(''); setSelectedCategory(''); setPage(1); }}
                     className="text-sm text-red-600 hover:underline">Limpar filtros</button>
                 )}
               </div>

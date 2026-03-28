@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { slugify } from '@/lib/utils';
 
 export async function GET() {

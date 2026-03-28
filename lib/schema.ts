@@ -86,6 +86,7 @@ export function initializeDatabase() {
       name TEXT NOT NULL,
       email TEXT NOT NULL,
       phone TEXT,
+      whatsapp TEXT,
       company TEXT,
       quantity INTEGER,
       message TEXT,
@@ -136,18 +137,21 @@ export function initializeDatabase() {
   const catCount = db.prepare('SELECT COUNT(*) as count FROM categories').get() as { count: number };
   if (catCount.count === 0) {
     const categories = [
-      ['Instrumentos de Escrita', 'instrumentos-de-escrita'],
-      ['Escritorio', 'escritorio'],
-      ['Tecnologia', 'tecnologia'],
-      ['Viagem', 'viagem'],
-      ['Cozinha', 'cozinha'],
-      ['Esporte e Lazer', 'esporte-e-lazer'],
-      ['Bolsas e Mochilas', 'bolsas-e-mochilas'],
-      ['Chaveiros', 'chaveiros'],
-      ['Casa e Restaurante', 'casa-e-restaurante'],
-      ['Guarda-chuvas', 'guarda-chuvas'],
-      ['Infantil e Escolar', 'infantil-e-escolar'],
-      ['Textil', 'textil'],
+      ['Novidades', 'novidades'],
+      ['Bar e Cozinha Personalizados', 'bar-e-cozinha-personalizados'],
+      ['Squeezes Personalizadas', 'squeezes-personalizadas'],
+      ['Canetas Personalizadas', 'canetas-personalizadas'],
+      ['Chaveiros Personalizados', 'chaveiros-personalizados'],
+      ['Mochilas Personalizadas', 'mochilas-personalizadas'],
+      ['Produtos Ecologicos Personalizados', 'produtos-ecologicos-personalizados'],
+      ['Eletronicos Personalizados', 'eletronicos-personalizados'],
+      ['Pen Drives Personalizados', 'pen-drives-personalizados'],
+      ['Guarda-chuvas Personalizados', 'guarda-chuvas-personalizados'],
+      ['Blocos de Anotacoes Personalizados', 'blocos-de-anotacoes-personalizados'],
+      ['Calculadoras Personalizadas', 'calculadoras-personalizadas'],
+      ['Kits Diversos Personalizados', 'kits-diversos-personalizados'],
+      ['Porta Cartao Personalizados', 'porta-cartao-personalizados'],
+      ['Relogios Personalizados', 'relogios-personalizados'],
     ];
     const stmt = db.prepare('INSERT INTO categories (name, slug, sort_order) VALUES (?, ?, ?)');
     categories.forEach(([name, slug], i) => {

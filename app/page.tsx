@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import CategoryStrip from '@/components/layout/CategoryStrip';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 
@@ -71,26 +72,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Categorias</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/categorias/${cat.slug}`}
-                className="category-card bg-white rounded-lg shadow-sm p-6 text-center hover:shadow-md">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900 text-sm">{cat.name}</h3>
-                <p className="text-xs text-gray-500 mt-1">{cat.product_count} produtos</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Category Strip */}
+      <CategoryStrip categories={categories} />
 
       {/* Featured Products */}
       {featuredProducts.length > 0 && (

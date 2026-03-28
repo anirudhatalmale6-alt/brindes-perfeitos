@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 interface QuoteRequest {
   id: number; product_id: number; product_name: string;
-  name: string; email: string; phone: string; company: string;
+  name: string; email: string; phone: string; whatsapp: string; company: string;
   quantity: number; message: string; status: string; created_at: string;
 }
 
@@ -45,7 +45,7 @@ export default function AdminQuotes() {
                   </span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  {q.email} {q.phone && `| ${q.phone}`}
+                  {q.email} {q.whatsapp && <span className="ml-2">| WhatsApp: <a href={`https://wa.me/${q.whatsapp.replace(/\D/g, '')}`} className="text-green-600 hover:underline">{q.whatsapp}</a></span>}
                 </p>
                 {q.product_name && (
                   <p className="text-sm text-blue-600 mt-1">Produto: {q.product_name}</p>

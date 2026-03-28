@@ -86,6 +86,9 @@ export abstract class BaseImporter {
       const categoryId = data.category_name ? this.findOrCreateCategory(data.category_name) : null;
       const slug = slugify(data.name);
 
+      // For new products, always assign to "Novidades" category first
+      const novidadesId = (db.prepare("SELECT id FROM categories WHERE slug = 'novidades'").get() as { id: number } | undefined)?.id;
+
       if (existing) {
         db.prepare(`
           UPDATE products SET name = ?, short_description = ?, description = ?, category_id = ?,
@@ -117,11 +120,11 @@ export abstract class BaseImporter {
         db.prepare(`
           INSERT INTO products (supplier, supplier_sku, name, slug, short_description, description, category_id,
           specs, colors, image_main, images, min_order, units_per_box, box_weight, box_dimensions,
-          personalization_techniques, source_url, is_active, last_synced_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'))
+          personalization_techniques, source_url, is_active, is_new, last_synced_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'))
         `).run(
           this.supplier, data.supplier_sku, data.name, finalSlug,
-          data.short_description || null, data.description || null, categoryId,
+          data.short_description || null, data.description || null, novidadesId || categoryId,
           data.specs ? JSON.stringify(data.specs) : null,
           data.colors ? JSON.stringify(data.colors) : null,
           data.image_main || null,

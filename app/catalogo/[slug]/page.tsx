@@ -5,8 +5,39 @@ import QuoteForm from './QuoteForm';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  initializeDatabase();
+  const db = getDb();
+  const product = db.prepare(`
+    SELECT p.name, p.short_description, p.supplier_sku, p.image_main, c.name as category_name
+    FROM products p LEFT JOIN categories c ON p.category_id = c.id
+    WHERE p.slug = ? AND p.is_active = 1
+  `).get(slug) as { name: string; short_description: string | null; supplier_sku: string | null; image_main: string | null; category_name: string | null } | undefined;
+
+  if (!product) return { title: 'Produto nao encontrado' };
+
+  const skuText = product.supplier_sku ? ` - Ref: ${product.supplier_sku}` : '';
+  const categoryText = product.category_name ? ` | ${product.category_name}` : '';
+  const title = `${product.name} Personalizado${skuText}${categoryText}`;
+  const description = product.short_description
+    || `${product.name} personalizado e promocional para sua empresa. Solicite um orcamento.${skuText}`;
+
+  return {
+    title,
+    description,
+    keywords: `${product.name}, ${product.name} personalizado, ${product.name} promocional, brinde personalizado, brinde promocional${product.supplier_sku ? `, ${product.supplier_sku}` : ''}`,
+    openGraph: {
+      title: `${product.name} - Brinde Promocional Personalizado`,
+      description,
+      images: product.image_main ? [product.image_main] : undefined,
+    },
+  };
+}
 
 interface DbProduct {
   id: number; name: string; slug: string; supplier: string; supplier_sku: string | null;
@@ -111,8 +142,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
 
                 {product.supplier_sku && (
-                  <p className="text-sm text-gray-400 mt-1">Ref: {product.supplier_sku}</p>
+                  <p className="text-sm text-gray-500 mt-1">Codigo: <strong>{product.supplier_sku}</strong></p>
                 )}
+                <p className="text-xs text-blue-600 mt-1 font-medium">Brinde Promocional Personalizado</p>
 
                 {product.short_description && (
                   <p className="text-gray-600 mt-4">{product.short_description}</p>
