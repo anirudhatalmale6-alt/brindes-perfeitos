@@ -3,25 +3,35 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --primary: #1a56db;
+  --primary-dark: #1e40af;
+  --primary-light: #3b82f6;
+  --accent: #f59e0b;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: #171717;
+  background: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #1a56db 0%, #1e40af 50%, #1e3a8a 100%);
+}
+
+.category-card:hover {
+  transform: scale(1.03);
+}
+
+.category-card {
+  transition: transform 0.2s ease;
 }
