@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 interface HomeProduct {
   id: number; name: string; slug: string; image_main: string | null;
-  category_name: string | null; supplier_sku: string | null; is_new: number; is_featured: number;
+  category_name: string | null; supplier_sku: string | null; min_order: number | null; is_new: number; is_featured: number;
 }
 
 interface HomeCategory {

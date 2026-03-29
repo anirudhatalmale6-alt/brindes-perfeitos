@@ -11,11 +11,12 @@ interface ProductCardProps {
   category_name: string | null;
   supplier?: string;
   supplier_sku?: string | null;
+  min_order?: number | null;
   is_new: number;
   is_featured: number;
 }
 
-export default function ProductCard({ id, name, slug, image_main, category_name, supplier_sku, is_new, is_featured }: ProductCardProps) {
+export default function ProductCard({ id, name, slug, image_main, category_name, supplier_sku, min_order, is_new, is_featured }: ProductCardProps) {
   return (
     <div className="product-card bg-white rounded-lg shadow-sm overflow-hidden">
       <Link href={`/catalogo/${slug}`} className="block">
@@ -39,11 +40,15 @@ export default function ProductCard({ id, name, slug, image_main, category_name,
             <span className="text-xs text-lime-600 font-medium uppercase">{category_name}</span>
           )}
           <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{name}</h3>
+          {min_order && min_order > 1 && (
+            <p className="text-xs text-amber-600 mt-1">Min: {min_order} un.</p>
+          )}
         </div>
       </Link>
       <div className="px-3 pb-3 pt-1">
         <AddToCartButton
-          product={{ id, name, slug, image_main, supplier_sku: supplier_sku || null, category_name }}
+          product={{ id, name, slug, image_main, supplier_sku: supplier_sku || null, category_name, min_order }}
+          quantity={min_order || 1}
         />
       </div>
     </div>

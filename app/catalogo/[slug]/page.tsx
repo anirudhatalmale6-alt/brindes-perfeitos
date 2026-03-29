@@ -213,7 +213,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <ProductActions product={{
                   id: product.id, name: product.name, slug: product.slug,
                   image_main: product.image_main, supplier_sku: product.supplier_sku,
-                  category_name: product.category_name,
+                  category_name: product.category_name, min_order: product.min_order,
                 }} />
               </div>
             </div>

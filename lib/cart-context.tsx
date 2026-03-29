@@ -9,6 +9,7 @@ export interface CartItem {
   image_main: string | null;
   supplier_sku: string | null;
   category_name: string | null;
+  min_order: number | null;
   quantity: number;
 }
 
@@ -61,7 +62,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (quantity <= 0) {
       setItems(prev => prev.filter(i => i.id !== id));
     } else {
-      setItems(prev => prev.map(i => i.id === id ? { ...i, quantity } : i));
+      setItems(prev => prev.map(i => {
+        if (i.id !== id) return i;
+        const min = i.min_order || 1;
+        return { ...i, quantity: Math.max(min, quantity) };
+      }));
     }
   }, []);
 

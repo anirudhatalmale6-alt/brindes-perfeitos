@@ -11,28 +11,35 @@ interface ProductActionsProps {
     image_main: string | null;
     supplier_sku: string | null;
     category_name: string | null;
+    min_order: number | null;
   };
 }
 
 export default function ProductActions({ product }: ProductActionsProps) {
-  const [quantity, setQuantity] = useState(1);
+  const min = product.min_order || 1;
+  const [quantity, setQuantity] = useState(min);
 
   return (
     <div className="mt-8 space-y-3">
+      {product.min_order && product.min_order > 1 && (
+        <p className="text-sm text-amber-600 font-medium">
+          Pedido minimo: {product.min_order} unidades
+        </p>
+      )}
       <div className="flex items-center gap-3">
         <label className="text-sm font-medium text-gray-700">Quantidade:</label>
         <div className="flex items-center border border-gray-300 rounded-lg">
           <button
-            onClick={() => setQuantity(q => Math.max(1, q - 1))}
+            onClick={() => setQuantity(q => Math.max(min, q - 1))}
             className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg"
           >
             -
           </button>
           <input
             type="number"
-            min="1"
+            min={min}
             value={quantity}
-            onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={e => setQuantity(Math.max(min, parseInt(e.target.value) || min))}
             className="w-16 text-center py-2 border-x border-gray-300"
           />
           <button

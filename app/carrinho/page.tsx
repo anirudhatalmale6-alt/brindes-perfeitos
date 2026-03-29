@@ -125,13 +125,18 @@ export default function CarrinhoPage() {
                             <p className="text-xs text-lime-600 mt-0.5">{item.category_name}</p>
                           )}
 
+                          {/* Min order notice */}
+                          {item.min_order && item.min_order > 1 && (
+                            <p className="text-xs text-amber-600 mt-1">Pedido minimo: {item.min_order} un.</p>
+                          )}
+
                           {/* Quantity + Remove */}
                           <div className="flex items-center gap-4 mt-2">
                             <div className="flex items-center border border-gray-300 rounded">
                               <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 className="px-2 py-1 text-gray-500 hover:bg-gray-100 text-sm">-</button>
-                              <input type="number" min="1" value={item.quantity}
-                                onChange={e => updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))}
+                              <input type="number" min={item.min_order || 1} value={item.quantity}
+                                onChange={e => updateQuantity(item.id, Math.max(item.min_order || 1, parseInt(e.target.value) || 1))}
                                 className="w-12 text-center py-1 border-x border-gray-300 text-sm" />
                               <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                 className="px-2 py-1 text-gray-500 hover:bg-gray-100 text-sm">+</button>
