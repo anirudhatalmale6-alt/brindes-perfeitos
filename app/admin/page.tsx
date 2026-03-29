@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   const cards = [
     { label: 'Total Produtos', value: stats.totalProducts, color: 'bg-lime-500' },
     { label: 'Categorias', value: stats.totalCategories, color: 'bg-green-500' },
-    { label: 'Orcamentos Pendentes', value: stats.pendingQuotes, color: 'bg-yellow-500' },
+    { label: 'Pedidos Pendentes', value: stats.pendingQuotes, color: 'bg-yellow-500' },
   ];
 
   return (
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
             Importar Produtos
           </a>
           <a href="/admin/orcamentos" className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 text-sm">
-            Ver Orcamentos
+            Ver Pedidos
           </a>
         </div>
       </div>

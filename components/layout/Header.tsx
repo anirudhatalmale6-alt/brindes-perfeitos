@@ -20,7 +20,7 @@ export default function Header() {
       <div className="bg-lime-700 text-white text-sm">
         <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
           <span>Brindes promocionais para sua empresa</span>
-          <Link href="/contato" className="hover:underline">Solicite um orcamento</Link>
+          <Link href="/contato" className="hover:underline">Monte seu carrinho de brindes</Link>
         </div>
       </div>
 
@@ -28,8 +28,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-lime-700">Brindes<span className="text-amber-500">Perfeitos</span></h1>
+          <Link href="/" className="flex-shrink-0 mr-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-lime-700">Brindes<span className="text-amber-500">Perfeitos</span></h1>
           </Link>
 
           {/* Search bar */}
@@ -52,7 +52,7 @@ export default function Header() {
             <Link href="/categorias" className="text-gray-700 hover:text-lime-600 font-medium text-sm">Categorias</Link>
             <Link href="/sobre" className="text-gray-700 hover:text-lime-600 font-medium text-sm">Sobre</Link>
             <Link href="/contato" className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 font-medium text-sm">
-              Orcamento
+              Carrinho
             </Link>
           </nav>
 
@@ -83,7 +83,7 @@ export default function Header() {
             <Link href="/categorias" className="block text-gray-700 hover:text-lime-600 font-medium">Categorias</Link>
             <Link href="/sobre" className="block text-gray-700 hover:text-lime-600 font-medium">Sobre</Link>
             <Link href="/contato" className="block bg-amber-500 text-white px-4 py-2 rounded-lg text-center font-medium">
-              Solicitar Orcamento
+              Meu Carrinho
             </Link>
           </nav>
         )}

@@ -42,7 +42,7 @@ export default function Footer() {
               <li>contato@brindesperfeitos.com.br</li>
               <li>
                 <Link href="/contato" className="bg-amber-500 text-white px-4 py-2 rounded-lg inline-block mt-2 hover:bg-amber-600 text-sm">
-                  Solicitar Orcamento
+                  Meu Carrinho
                 </Link>
               </li>
             </ul>

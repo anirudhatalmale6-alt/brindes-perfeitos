@@ -55,16 +55,16 @@ export default function QuoteForm({ productId, productName }: QuoteFormProps) {
   if (submitted) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-        <h3 className="text-xl font-bold text-green-800 mb-2">Orcamento Solicitado!</h3>
-        <p className="text-green-600">Recebemos sua solicitacao para &quot;{productName}&quot;. Entraremos em contato em breve.</p>
+        <h3 className="text-xl font-bold text-green-800 mb-2">Produto Adicionado ao Carrinho!</h3>
+        <p className="text-green-600">Recebemos seu pedido de &quot;{productName}&quot;. Entraremos em contato em breve com seu orcamento.</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-2">Solicitar Orcamento</h2>
-      <p className="text-gray-500 mb-6">Preencha o formulario abaixo para receber um orcamento para: <strong>{productName}</strong></p>
+      <h2 className="text-xl font-bold text-gray-900 mb-2">Adicionar ao Carrinho</h2>
+      <p className="text-gray-500 mb-6">Preencha os dados abaixo para adicionar ao carrinho: <strong>{productName}</strong></p>
 
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
 
@@ -109,7 +109,7 @@ export default function QuoteForm({ productId, productName }: QuoteFormProps) {
         <div className="md:col-span-2">
           <button type="submit" disabled={submitting}
             className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 disabled:opacity-50">
-            {submitting ? 'Enviando...' : 'Enviar Solicitacao'}
+            {submitting ? 'Enviando...' : 'Adicionar ao Carrinho'}
           </button>
         </div>
       </form>

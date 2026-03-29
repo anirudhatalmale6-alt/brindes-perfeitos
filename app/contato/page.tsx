@@ -52,7 +52,7 @@ export default function ContatoPage() {
         <div className="max-w-4xl mx-auto px-4 py-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Contato</h1>
           <p className="text-gray-600 mb-8 text-lg">
-            Solicite um orcamento ou entre em contato conosco. Responderemos em ate 24 horas.
+            Adicione produtos ao seu carrinho e receba seu orcamento. Responderemos em ate 24 horas.
           </p>
 
           {submitted ? (

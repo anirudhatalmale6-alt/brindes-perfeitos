@@ -136,10 +136,10 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Precisa de brindes para sua empresa?</h2>
           <p className="text-lime-100 mb-8 text-lg">
-            Entre em contato conosco e receba um orcamento personalizado para seus brindes promocionais.
+            Monte seu carrinho de brindes personalizados e receba seu orcamento rapidamente.
           </p>
           <Link href="/contato" className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg inline-block">
-            Solicitar Orcamento Gratis
+            Montar Meu Carrinho
           </Link>
         </div>
       </section>

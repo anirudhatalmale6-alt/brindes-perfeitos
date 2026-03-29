@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const categoryText = product.category_name ? ` | ${product.category_name}` : '';
   const title = `${product.name} Personalizado${skuText}${categoryText}`;
   const description = product.short_description
-    || `${product.name} personalizado e promocional para sua empresa. Solicite um orcamento.${skuText}`;
+    || `${product.name} personalizado e promocional para sua empresa. Adicione ao carrinho.${skuText}`;
 
   return {
     title,
@@ -211,9 +211,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {/* CTA */}
                 <div className="mt-8">
-                  <Link href="#orcamento"
+                  <Link href="#carrinho"
                     className="block w-full bg-amber-500 text-white text-center py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg">
-                    Solicitar Orcamento
+                    Adicionar ao Carrinho
                   </Link>
                 </div>
               </div>
@@ -229,8 +229,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Quote Form */}
-          <div id="orcamento" className="mt-8">
+          {/* Cart Form */}
+          <div id="carrinho" className="mt-8">
             <QuoteForm productId={product.id} productName={product.name} />
           </div>
 

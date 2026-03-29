@@ -26,7 +26,7 @@ export default function AdminQuotes() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Solicitacoes de Orcamento</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Pedidos do Carrinho</h1>
 
       <div className="bg-white rounded-lg shadow">
         {quotes.length === 0 ? (

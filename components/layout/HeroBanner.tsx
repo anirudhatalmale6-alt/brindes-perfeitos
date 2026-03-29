@@ -28,9 +28,9 @@ const defaultSlides: Slide[] = [
   },
   {
     id: 2,
-    title: 'Solicite seu Orcamento',
+    title: 'Monte seu Carrinho',
     subtitle: 'Personalizacao com a sua marca. Milhares de opcoes para sua empresa se destacar.',
-    cta_text: 'Solicitar Orcamento',
+    cta_text: 'Adicionar ao Carrinho',
     cta_link: '/contato',
   },
   {
