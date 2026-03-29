@@ -11,6 +11,17 @@ interface QuoteEmailData {
   message?: string | null;
 }
 
+interface CartQuoteEmailData {
+  quoteNumber: string;
+  name: string;
+  company: string;
+  email: string;
+  whatsapp: string;
+  message: string | null;
+  items: { id: number; name: string; supplier_sku: string | null; category_name: string | null; quantity: number }[];
+  pdfBuffer: Buffer;
+}
+
 function getTransporter() {
   // SMTP settings from environment variables
   // The client will configure these for their domain
@@ -123,6 +134,109 @@ export async function sendQuoteNotification(data: QuoteEmailData): Promise<boole
     return true;
   } catch (err) {
     console.error('[EMAIL] Failed to send:', err);
+    return false;
+  }
+}
+
+export async function sendCartQuoteEmail(data: CartQuoteEmailData): Promise<boolean> {
+  const businessEmail = getBusinessEmail();
+  const smtpConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
+
+  const itemsList = data.items.map((item, i) =>
+    `${i + 1}. ${item.name}${item.supplier_sku ? ` (${item.supplier_sku})` : ''} - Qtd: ${item.quantity}`
+  ).join('\n');
+
+  if (!smtpConfigured) {
+    console.log(`[CART QUOTE] ${data.quoteNumber}`);
+    console.log(`  Cliente: ${data.name} - ${data.company}`);
+    console.log(`  Email: ${data.email} | WhatsApp: ${data.whatsapp}`);
+    console.log(`  Produtos:\n${itemsList}`);
+    console.log(`  PDF gerado: ${data.pdfBuffer.length} bytes`);
+    return false;
+  }
+
+  const transporter = getTransporter();
+  const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@brindesperfeitos.com.br';
+  const subject = `Pedido de Orcamento ${data.quoteNumber} - ${data.company}`;
+
+  const htmlItems = data.items.map((item, i) => `
+    <tr style="border-bottom: 1px solid #e5e7eb;">
+      <td style="padding: 8px;">${i + 1}</td>
+      <td style="padding: 8px;">${item.name}</td>
+      <td style="padding: 8px;">${item.supplier_sku || '-'}</td>
+      <td style="padding: 8px; text-align: center;">${item.quantity}</td>
+    </tr>
+  `).join('');
+
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #5AA300; padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px;">Brindes Perfeitos</h1>
+        <p style="color: #d4f5a0; margin: 5px 0 0;">Pedido de Orcamento ${data.quoteNumber}</p>
+      </div>
+      <div style="padding: 24px;">
+        <p><strong>Cliente:</strong> ${data.name} - ${data.company}</p>
+        <p><strong>Email:</strong> ${data.email} | <strong>WhatsApp:</strong> ${data.whatsapp}</p>
+        ${data.message ? `<p><strong>Observacoes:</strong> ${data.message}</p>` : ''}
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+          <thead>
+            <tr style="background: #5AA300; color: white;">
+              <th style="padding: 8px; text-align: left;">#</th>
+              <th style="padding: 8px; text-align: left;">Produto</th>
+              <th style="padding: 8px; text-align: left;">Codigo</th>
+              <th style="padding: 8px; text-align: center;">Qtd</th>
+            </tr>
+          </thead>
+          <tbody>${htmlItems}</tbody>
+        </table>
+        <p style="margin-top: 16px; color: #6b7280; font-size: 12px;">O orcamento em PDF esta anexado a este email.</p>
+      </div>
+    </div>
+  `;
+
+  const attachment = {
+    filename: `orcamento-${data.quoteNumber}.pdf`,
+    content: data.pdfBuffer,
+    contentType: 'application/pdf',
+  };
+
+  try {
+    // Send to business
+    await transporter.sendMail({
+      from: `"Brindes Perfeitos" <${fromEmail}>`,
+      to: businessEmail,
+      subject,
+      html: htmlBody,
+      text: `Pedido ${data.quoteNumber}\nCliente: ${data.name} - ${data.company}\nEmail: ${data.email}\nWhatsApp: ${data.whatsapp}\n\nProdutos:\n${itemsList}`,
+      attachments: [attachment],
+    });
+
+    // Send to customer
+    await transporter.sendMail({
+      from: `"Brindes Perfeitos" <${fromEmail}>`,
+      to: data.email,
+      subject: `Seu Orcamento ${data.quoteNumber} - Brindes Perfeitos`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #5AA300; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 22px;">Brindes Perfeitos</h1>
+          </div>
+          <div style="padding: 24px;">
+            <p>Ola <strong>${data.name}</strong>,</p>
+            <p>Recebemos seu pedido de orcamento com <strong>${data.items.length} produto(s)</strong>.</p>
+            <p>O PDF do orcamento esta anexado a este email.</p>
+            <p>Nossa equipe entrara em contato em ate 24 horas com os precos e condicoes.</p>
+            <p>Atenciosamente,<br/><strong>Equipe Brindes Perfeitos</strong></p>
+          </div>
+        </div>
+      `,
+      text: `Ola ${data.name},\n\nRecebemos seu pedido de orcamento com ${data.items.length} produto(s).\nO PDF esta anexado.\n\nAtenciosamente,\nEquipe Brindes Perfeitos`,
+      attachments: [attachment],
+    });
+
+    return true;
+  } catch (err) {
+    console.error('[EMAIL] Cart quote send failed:', err);
     return false;
   }
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import QuoteForm from './QuoteForm';
+import ProductActions from './ProductActions';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 import { notFound } from 'next/navigation';
@@ -209,13 +209,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* CTA */}
-                <div className="mt-8">
-                  <Link href="#carrinho"
-                    className="block w-full bg-amber-500 text-white text-center py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg">
-                    Adicionar ao Carrinho
-                  </Link>
-                </div>
+                {/* Add to Cart */}
+                <ProductActions product={{
+                  id: product.id, name: product.name, slug: product.slug,
+                  image_main: product.image_main, supplier_sku: product.supplier_sku,
+                  category_name: product.category_name,
+                }} />
               </div>
             </div>
 
@@ -227,11 +226,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   dangerouslySetInnerHTML={{ __html: product.description! }} />
               </div>
             )}
-          </div>
-
-          {/* Cart Form */}
-          <div id="carrinho" className="mt-8">
-            <QuoteForm productId={product.id} productName={product.name} />
           </div>
 
           {/* Related Products */}

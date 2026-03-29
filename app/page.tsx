@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CategoryStrip from '@/components/layout/CategoryStrip';
 import HeroBanner from '@/components/layout/HeroBanner';
+import ProductCard from '@/components/products/ProductCard';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 interface HomeProduct {
   id: number; name: string; slug: string; image_main: string | null;
-  category_name: string | null; is_new: number; is_featured: number;
+  category_name: string | null; supplier_sku: string | null; is_new: number; is_featured: number;
 }
 
 interface HomeCategory {
@@ -71,25 +72,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {featuredProducts.map((p) => (
-                <Link key={p.id} href={`/catalogo/${p.slug}`}
-                  className="product-card bg-white rounded-lg shadow-sm overflow-hidden">
-                  <div className="aspect-square bg-gray-100 relative">
-                    {p.image_main ? (
-                      <img src={p.image_main} alt={p.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded">Destaque</span>
-                  </div>
-                  <div className="p-3">
-                    <span className="text-xs text-lime-600 font-medium">{(p.category_name) || 'Brindes'}</span>
-                    <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{p.name}</h3>
-                  </div>
-                </Link>
+                <ProductCard key={p.id} {...p} supplier_sku={p.supplier_sku} />
               ))}
             </div>
           </div>
@@ -106,25 +89,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {newProducts.map((p) => (
-                <Link key={p.id} href={`/catalogo/${p.slug}`}
-                  className="product-card bg-white rounded-lg shadow-sm overflow-hidden">
-                  <div className="aspect-square bg-gray-100 relative">
-                    {p.image_main ? (
-                      <img src={p.image_main} alt={p.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                    <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded">Novo</span>
-                  </div>
-                  <div className="p-3">
-                    <span className="text-xs text-lime-600 font-medium">{(p.category_name) || 'Brindes'}</span>
-                    <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{p.name}</h3>
-                  </div>
-                </Link>
+                <ProductCard key={p.id} {...p} supplier_sku={p.supplier_sku} />
               ))}
             </div>
           </div>
@@ -138,8 +103,8 @@ export default function Home() {
           <p className="text-lime-100 mb-8 text-lg">
             Monte seu carrinho de brindes personalizados e receba seu orcamento rapidamente.
           </p>
-          <Link href="/contato" className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg inline-block">
-            Montar Meu Carrinho
+          <Link href="/carrinho" className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg inline-block">
+            Ver Meu Carrinho
           </Link>
         </div>
       </section>
