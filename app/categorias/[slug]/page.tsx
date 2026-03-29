@@ -49,9 +49,9 @@ export default function CategoryPage() {
       <div className="flex-1 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">Inicio</Link>
+            <Link href="/" className="hover:text-lime-600">Inicio</Link>
             <span className="mx-2">/</span>
-            <Link href="/categorias" className="hover:text-blue-600">Categorias</Link>
+            <Link href="/categorias" className="hover:text-lime-600">Categorias</Link>
             <span className="mx-2">/</span>
             <span className="text-gray-900">{categoryName}</span>
           </nav>
@@ -64,7 +64,7 @@ export default function CategoryPage() {
           ) : products.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-gray-500">Nenhum produto nesta categoria ainda.</p>
-              <Link href="/catalogo" className="text-blue-600 hover:underline mt-2 inline-block">Ver todo o catalogo</Link>
+              <Link href="/catalogo" className="text-lime-600 hover:underline mt-2 inline-block">Ver todo o catalogo</Link>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

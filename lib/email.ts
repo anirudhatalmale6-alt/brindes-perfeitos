@@ -56,9 +56,9 @@ export async function sendQuoteNotification(data: QuoteEmailData): Promise<boole
 
   const htmlBody = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: #1d4ed8; padding: 20px; text-align: center;">
+      <div style="background: #5AA300; padding: 20px; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 22px;">Brindes Perfeitos</h1>
-        <p style="color: #93c5fd; margin: 5px 0 0;">Nova Solicitacao de Orcamento</p>
+        <p style="color: #d4f5a0; margin: 5px 0 0;">Nova Solicitacao de Orcamento</p>
       </div>
       <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb;">
         <table style="width: 100%; border-collapse: collapse;">
@@ -107,7 +107,7 @@ export async function sendQuoteNotification(data: QuoteEmailData): Promise<boole
       text: `Ola ${data.name},\n\nRecebemos sua solicitacao de orcamento${data.product_name ? ` para "${data.product_name}"` : ''}.\n\nNossa equipe entrara em contato em ate 24 horas.\n\nAtenciosamente,\nEquipe Brindes Perfeitos`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: #1d4ed8; padding: 20px; text-align: center;">
+          <div style="background: #5AA300; padding: 20px; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 22px;">Brindes Perfeitos</h1>
           </div>
           <div style="padding: 24px;">

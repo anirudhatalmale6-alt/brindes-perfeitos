@@ -72,7 +72,7 @@ export default function AdminCategories() {
         <input type="text" placeholder="Descricao (opcional)" value={newCat.description}
           onChange={e => setNewCat(n => ({ ...n, description: e.target.value }))}
           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+        <button type="submit" className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 text-sm">
           + Adicionar
         </button>
       </form>
@@ -116,7 +116,7 @@ export default function AdminCategories() {
                   ) : (
                     <div className="flex gap-2">
                       <button onClick={() => { setEditing(c.id); setEditForm({ name: c.name, description: c.description }); }}
-                        className="text-blue-600 text-sm">Editar</button>
+                        className="text-lime-600 text-sm">Editar</button>
                       <button onClick={() => deleteCategory(c.id)} className="text-red-600 text-sm">Excluir</button>
                     </div>
                   )}

@@ -62,7 +62,7 @@ function CatalogPage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">Inicio</Link>
+            <Link href="/" className="hover:text-lime-600">Inicio</Link>
             <span className="mx-2">/</span>
             <span className="text-gray-900">Catalogo</span>
           </nav>
@@ -144,7 +144,7 @@ function CatalogPage() {
                     if (p < 1 || p > totalPages) return null;
                     return (
                       <button key={p} onClick={() => setPage(p)}
-                        className={`px-4 py-2 border rounded-lg text-sm ${page === p ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}>
+                        className={`px-4 py-2 border rounded-lg text-sm ${page === p ? 'bg-lime-600 text-white' : 'hover:bg-gray-100'}`}>
                         {p}
                       </button>
                     );

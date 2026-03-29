@@ -58,11 +58,11 @@ export default function Home() {
       <section className="hero-gradient text-white py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Brindes Promocionais Personalizados</h1>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-lime-100 mb-8 max-w-2xl mx-auto">
             Encontre o brinde perfeito para sua empresa. Mais de {totalProducts > 0 ? totalProducts.toLocaleString('pt-BR') : '1.000'} produtos dos melhores fornecedores do Brasil.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/catalogo" className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 text-lg">
+            <Link href="/catalogo" className="bg-white text-lime-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 text-lg">
               Ver Catalogo
             </Link>
             <Link href="/contato" className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg">
@@ -81,7 +81,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Produtos em Destaque</h2>
-              <Link href="/catalogo?featured=1" className="text-blue-600 hover:underline font-medium">Ver todos</Link>
+              <Link href="/catalogo?featured=1" className="text-lime-600 hover:underline font-medium">Ver todos</Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {featuredProducts.map((p) => (
@@ -100,7 +100,7 @@ export default function Home() {
                     <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded">Destaque</span>
                   </div>
                   <div className="p-3">
-                    <span className="text-xs text-blue-600 font-medium">{(p.category_name) || 'Brindes'}</span>
+                    <span className="text-xs text-lime-600 font-medium">{(p.category_name) || 'Brindes'}</span>
                     <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{p.name}</h3>
                   </div>
                 </Link>
@@ -116,7 +116,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Novidades</h2>
-              <Link href="/catalogo" className="text-blue-600 hover:underline font-medium">Ver todos</Link>
+              <Link href="/catalogo" className="text-lime-600 hover:underline font-medium">Ver todos</Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {newProducts.map((p) => (
@@ -135,7 +135,7 @@ export default function Home() {
                     <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded">Novo</span>
                   </div>
                   <div className="p-3">
-                    <span className="text-xs text-blue-600 font-medium">{(p.category_name) || 'Brindes'}</span>
+                    <span className="text-xs text-lime-600 font-medium">{(p.category_name) || 'Brindes'}</span>
                     <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{p.name}</h3>
                   </div>
                 </Link>
@@ -146,10 +146,10 @@ export default function Home() {
       )}
 
       {/* CTA */}
-      <section className="py-16 bg-blue-700 text-white">
+      <section className="py-16 bg-lime-700 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Precisa de brindes para sua empresa?</h2>
-          <p className="text-blue-100 mb-8 text-lg">
+          <p className="text-lime-100 mb-8 text-lg">
             Entre em contato conosco e receba um orcamento personalizado para seus brindes promocionais.
           </p>
           <Link href="/contato" className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg inline-block">

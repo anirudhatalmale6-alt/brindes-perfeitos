@@ -20,7 +20,7 @@ export default function AdminQuotes() {
 
   const statusColors: Record<string, string> = {
     new: 'bg-yellow-100 text-yellow-700',
-    contacted: 'bg-blue-100 text-blue-700',
+    contacted: 'bg-lime-100 text-lime-700',
     closed: 'bg-gray-100 text-gray-500',
   };
 
@@ -48,7 +48,7 @@ export default function AdminQuotes() {
                   {q.email} {q.whatsapp && <span className="ml-2">| WhatsApp: <a href={`https://wa.me/${q.whatsapp.replace(/\D/g, '')}`} className="text-green-600 hover:underline">{q.whatsapp}</a></span>}
                 </p>
                 {q.product_name && (
-                  <p className="text-sm text-blue-600 mt-1">Produto: {q.product_name}</p>
+                  <p className="text-sm text-lime-600 mt-1">Produto: {q.product_name}</p>
                 )}
                 {q.quantity && (
                   <p className="text-sm text-gray-600">Quantidade: {q.quantity}</p>

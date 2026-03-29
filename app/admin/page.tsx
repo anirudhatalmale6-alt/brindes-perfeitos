@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   if (!stats) return <div className="text-gray-500">Carregando...</div>;
 
   const cards = [
-    { label: 'Total Produtos', value: stats.totalProducts, color: 'bg-blue-500' },
+    { label: 'Total Produtos', value: stats.totalProducts, color: 'bg-lime-500' },
     { label: 'Categorias', value: stats.totalCategories, color: 'bg-green-500' },
     { label: 'Orcamentos Pendentes', value: stats.pendingQuotes, color: 'bg-yellow-500' },
   ];
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold mb-4">Acoes Rapidas</h2>
         <div className="flex gap-4">
-          <a href="/admin/produtos/novo" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+          <a href="/admin/produtos/novo" className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 text-sm">
             Adicionar Produto
           </a>
           <a href="/admin/importar" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">

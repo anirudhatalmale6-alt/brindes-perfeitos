@@ -74,7 +74,7 @@ export default function AdminImport() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Importar Produtos</h1>
 
       {statusMsg && (
-        <div className="mb-6 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm">{statusMsg}</div>
+        <div className="mb-6 p-4 bg-lime-50 text-lime-800 rounded-lg text-sm">{statusMsg}</div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -104,11 +104,11 @@ export default function AdminImport() {
             <input
               type="file" accept=".csv,.xlsx,.xls"
               onChange={e => setCsvFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-lime-50 file:text-lime-700 hover:file:bg-lime-100"
             />
             <button
               type="submit" disabled={!csvFile || csvImporting}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+              className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 disabled:opacity-50 text-sm"
             >
               {csvImporting ? 'Importando...' : 'Importar CSV'}
             </button>

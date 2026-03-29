@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --primary: #1a56db;
-  --primary-dark: #1e40af;
-  --primary-light: #3b82f6;
+  --primary: #83E509;
+  --primary-dark: #6BBF00;
+  --primary-light: #A3F044;
   --accent: #f59e0b;
 }
 
@@ -25,7 +25,7 @@ body {
 }
 
 .hero-gradient {
-  background: linear-gradient(135deg, #1a56db 0%, #1e40af 50%, #1e3a8a 100%);
+  background: linear-gradient(135deg, #5AA300 0%, #6BBF00 50%, #83E509 100%);
 }
 
 .category-card:hover {

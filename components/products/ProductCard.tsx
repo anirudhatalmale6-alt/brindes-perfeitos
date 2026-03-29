@@ -32,7 +32,7 @@ export default function ProductCard({ name, slug, image_main, category_name, is_
       </div>
       <div className="p-3">
         {category_name && (
-          <span className="text-xs text-blue-600 font-medium uppercase">{category_name}</span>
+          <span className="text-xs text-lime-600 font-medium uppercase">{category_name}</span>
         )}
         <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{name}</h3>
       </div>

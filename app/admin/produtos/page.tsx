@@ -70,7 +70,7 @@ export default function AdminProducts() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Produtos ({total})</h1>
-        <Link href="/admin/produtos/novo" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+        <Link href="/admin/produtos/novo" className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 text-sm">
           + Novo Produto
         </Link>
       </div>
@@ -120,7 +120,7 @@ export default function AdminProducts() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/admin/produtos/${p.id}`} className="text-blue-600 hover:underline font-medium text-sm">
+                    <Link href={`/admin/produtos/${p.id}`} className="text-lime-600 hover:underline font-medium text-sm">
                       {p.name}
                     </Link>
                     {p.supplier_sku && <p className="text-xs text-gray-400">SKU: {p.supplier_sku}</p>}
@@ -141,7 +141,7 @@ export default function AdminProducts() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <Link href={`/admin/produtos/${p.id}`} className="text-blue-600 hover:underline text-sm">Editar</Link>
+                      <Link href={`/admin/produtos/${p.id}`} className="text-lime-600 hover:underline text-sm">Editar</Link>
                       <button onClick={() => deleteProduct(p.id)} className="text-red-600 hover:underline text-sm">Excluir</button>
                     </div>
                   </td>

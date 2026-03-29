@@ -76,28 +76,28 @@ export default function ContatoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
                     <input type="text" required value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500"
                       placeholder="Seu nome completo" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Empresa *</label>
                     <input type="text" required value={form.company}
                       onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500"
                       placeholder="Nome da empresa" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                     <input type="email" required value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500"
                       placeholder="seu@email.com" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp *</label>
                     <input type="tel" required value={form.whatsapp}
                       onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500"
                       placeholder="(11) 99999-9999" />
                   </div>
                 </div>
@@ -106,7 +106,7 @@ export default function ContatoPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mensagem *</label>
                   <textarea required value={form.message}
                     onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={5}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500" rows={5}
                     placeholder="Conte-nos sobre seu projeto, produtos de interesse, quantidades, prazos..." />
                 </div>
 

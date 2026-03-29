@@ -178,7 +178,7 @@ export default function EditProduct() {
 
         <div className="flex gap-3 pt-4">
           <button type="submit" disabled={saving}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            className="bg-lime-600 text-white px-6 py-2 rounded-lg hover:bg-lime-700 disabled:opacity-50">
             {saving ? 'Salvando...' : 'Salvar Alteracoes'}
           </button>
           <button type="button" onClick={() => router.back()}

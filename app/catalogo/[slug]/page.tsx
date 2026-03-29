@@ -89,13 +89,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">Inicio</Link>
+            <Link href="/" className="hover:text-lime-600">Inicio</Link>
             <span className="mx-2">/</span>
-            <Link href="/catalogo" className="hover:text-blue-600">Catalogo</Link>
+            <Link href="/catalogo" className="hover:text-lime-600">Catalogo</Link>
             {product.category_name && (
               <>
                 <span className="mx-2">/</span>
-                <Link href={`/categorias/${product.category_slug}`} className="hover:text-blue-600">
+                <Link href={`/categorias/${product.category_slug}`} className="hover:text-lime-600">
                   {product.category_name}
                 </Link>
               </>
@@ -135,7 +135,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div>
                 {product.category_name && (
                   <Link href={`/categorias/${product.category_slug}`}
-                    className="text-sm text-blue-600 font-medium uppercase">
+                    className="text-sm text-lime-600 font-medium uppercase">
                     {product.category_name}
                   </Link>
                 )}
@@ -144,7 +144,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.supplier_sku && (
                   <p className="text-sm text-gray-500 mt-1">Codigo: <strong>{product.supplier_sku}</strong></p>
                 )}
-                <p className="text-xs text-blue-600 mt-1 font-medium">Brinde Promocional Personalizado</p>
+                <p className="text-xs text-lime-600 mt-1 font-medium">Brinde Promocional Personalizado</p>
 
                 {product.short_description && (
                   <p className="text-gray-600 mt-4">{product.short_description}</p>
@@ -190,7 +190,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">Tecnicas de Personalizacao</h3>
                     <div className="flex gap-2 flex-wrap">
                       {techniques.map((t: string, i: number) => (
-                        <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded text-sm">{t}</span>
+                        <span key={i} className="px-3 py-1 bg-lime-50 text-lime-700 rounded text-sm">{t}</span>
                       ))}
                     </div>
                   </div>
