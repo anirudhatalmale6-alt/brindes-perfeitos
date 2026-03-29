@@ -39,8 +39,10 @@ function getCategoryIcon(slug: string): JSX.Element {
 }
 
 export default function CategoryStrip({ categories }: { categories: Category[] }) {
-  // Filter to show only the main homepage categories (exclude Novidades from strip)
-  const displayCategories = categories.filter(c => c.slug !== 'novidades');
+  // Show all categories, with Novidades at the end
+  const novidades = categories.filter(c => c.slug === 'novidades');
+  const others = categories.filter(c => c.slug !== 'novidades');
+  const displayCategories = [...others, ...novidades];
 
   return (
     <section className="bg-amber-500 py-4 overflow-x-auto">

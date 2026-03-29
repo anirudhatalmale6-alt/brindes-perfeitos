@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CategoryStrip from '@/components/layout/CategoryStrip';
+import HeroBanner from '@/components/layout/HeroBanner';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 
@@ -54,23 +55,8 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Hero */}
-      <section className="hero-gradient text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Brindes Promocionais Personalizados</h1>
-          <p className="text-xl text-lime-100 mb-8 max-w-2xl mx-auto">
-            Encontre o brinde perfeito para sua empresa. Mais de {totalProducts > 0 ? totalProducts.toLocaleString('pt-BR') : '1.000'} produtos dos melhores fornecedores do Brasil.
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/catalogo" className="bg-white text-lime-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 text-lg">
-              Ver Catalogo
-            </Link>
-            <Link href="/contato" className="bg-amber-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-amber-600 text-lg">
-              Solicitar Orcamento
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hero Banner Slider */}
+      <HeroBanner totalProducts={totalProducts} />
 
       {/* Category Strip */}
       <CategoryStrip categories={categories} />
