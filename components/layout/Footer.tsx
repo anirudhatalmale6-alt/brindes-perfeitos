@@ -39,7 +39,7 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-3">Contato</h4>
             <ul className="space-y-2 text-sm">
-              <li>contact@brindesperfeitos.com.br</li>
+              <li>contato@brindesperfeitos.com.br</li>
               <li><a href="tel:+551127719911" className="hover:text-white">(11) 2771-9911</a></li>
               <li><a href="https://wa.me/551127719911" className="hover:text-white">WhatsApp: (11) 2771-9911</a></li>
               <li>
