@@ -20,7 +20,10 @@ export default function Header() {
       <div className="bg-lime-700 text-white text-sm">
         <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
           <span>Brindes promocionais para sua empresa</span>
-          <Link href="/contato" className="hover:underline">Monte seu carrinho de brindes</Link>
+          <div className="flex items-center gap-4">
+            <a href="https://wa.me/551127719911" className="hover:underline hidden sm:inline">(11) 2771-9911</a>
+            <Link href="/contato" className="hover:underline">Monte seu carrinho de brindes</Link>
+          </div>
         </div>
       </div>
 
