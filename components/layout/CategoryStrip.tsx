@@ -43,11 +43,11 @@ export default function CategoryStrip({ categories }: { categories: Category[] }
   const displayCategories = categories.filter(c => c.slug !== 'novidades');
 
   return (
-    <section className="bg-orange-500 py-4 overflow-x-auto">
+    <section className="bg-amber-500 py-4 overflow-x-auto">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center gap-1 min-w-max">
           {/* All categories link */}
-          <Link href="/categorias" className="flex flex-col items-center px-4 py-2 hover:bg-orange-600 rounded-lg transition-colors min-w-[100px]">
+          <Link href="/categorias" className="flex flex-col items-center px-4 py-2 hover:bg-amber-600 rounded-lg transition-colors min-w-[100px]">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
@@ -56,7 +56,7 @@ export default function CategoryStrip({ categories }: { categories: Category[] }
 
           {displayCategories.map(cat => (
             <Link key={cat.id} href={`/categorias/${cat.slug}`}
-              className="flex flex-col items-center px-4 py-2 hover:bg-orange-600 rounded-lg transition-colors min-w-[100px]">
+              className="flex flex-col items-center px-4 py-2 hover:bg-amber-600 rounded-lg transition-colors min-w-[100px]">
               {getCategoryIcon(cat.slug)}
               <span className="text-white text-xs font-semibold mt-1 text-center leading-tight max-w-[90px]">
                 {cat.name.replace(' Personalizados', '').replace(' Personalizadas', '')}
