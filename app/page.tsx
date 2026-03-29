@@ -15,7 +15,7 @@ interface HomeProduct {
 }
 
 interface HomeCategory {
-  id: number; name: string; slug: string; product_count: number;
+  id: number; name: string; slug: string; parent_id: number | null; product_count: number;
 }
 
 function getData() {

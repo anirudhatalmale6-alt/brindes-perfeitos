@@ -9,9 +9,13 @@ export async function GET() {
   initializeDatabase();
   const db = getDb();
   const categories = db.prepare(`
-    SELECT c.*, COUNT(p.id) as product_count
+    SELECT c.*,
+      COUNT(DISTINCT p.id) as product_count,
+      (SELECT COUNT(*) FROM categories sub WHERE sub.parent_id = c.id) as children_count,
+      pc.name as parent_name, pc.slug as parent_slug
     FROM categories c
     LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1
+    LEFT JOIN categories pc ON c.parent_id = pc.id
     GROUP BY c.id
     ORDER BY c.sort_order ASC, c.name ASC
   `).all();
@@ -54,7 +58,10 @@ export async function DELETE(request: NextRequest) {
   initializeDatabase();
   const db = getDb();
   const { id } = await request.json();
+  // Unlink products from this category
   db.prepare('UPDATE products SET category_id = NULL WHERE category_id = ?').run(id);
+  // Unlink subcategories (set parent_id to NULL)
+  db.prepare('UPDATE categories SET parent_id = NULL WHERE parent_id = ?').run(id);
   db.prepare('DELETE FROM categories WHERE id = ?').run(id);
   return NextResponse.json({ success: true });
 }

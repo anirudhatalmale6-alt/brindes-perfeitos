@@ -12,7 +12,7 @@ interface Product {
   category_name: string; supplier: string; supplier_sku: string | null; min_order: number | null; is_new: number; is_featured: number;
 }
 
-interface Category { id: number; name: string; slug: string; product_count: number; }
+interface Category { id: number; name: string; slug: string; parent_id: number | null; product_count: number; }
 
 export default function CatalogPageWrapper() {
   return (
@@ -86,9 +86,17 @@ function CatalogPage() {
                   <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(1); }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                     <option value="">Todas</option>
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name} ({c.product_count})</option>
-                    ))}
+                    {categories.filter(c => !c.parent_id).map(main => {
+                      const subs = categories.filter(c => c.parent_id === main.id);
+                      return (
+                        <optgroup key={main.id} label={main.name}>
+                          <option value={main.id}>Todos ({main.product_count})</option>
+                          {subs.map(sub => (
+                            <option key={sub.id} value={sub.id}>{sub.name} ({sub.product_count})</option>
+                          ))}
+                        </optgroup>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -115,7 +123,17 @@ function CatalogPage() {
                 <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(1); }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                   <option value="">Categoria</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {categories.filter(c => !c.parent_id).map(main => {
+                    const subs = categories.filter(c => c.parent_id === main.id);
+                    return (
+                      <optgroup key={main.id} label={main.name}>
+                        <option value={main.id}>Todos</option>
+                        {subs.map(sub => (
+                          <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
                 </select>
               </div>
 

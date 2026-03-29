@@ -6,6 +6,7 @@ interface Category {
   id: number;
   name: string;
   slug: string;
+  parent_id: number | null;
   product_count: number;
 }
 
@@ -39,9 +40,10 @@ function getCategoryIcon(slug: string): JSX.Element {
 }
 
 export default function CategoryStrip({ categories }: { categories: Category[] }) {
-  // Show all categories, with Novidades at the end
-  const novidades = categories.filter(c => c.slug === 'novidades');
-  const others = categories.filter(c => c.slug !== 'novidades');
+  // Only show main categories (no subcategories), with Novidades at the end
+  const mainCats = categories.filter(c => !c.parent_id);
+  const novidades = mainCats.filter(c => c.slug === 'novidades');
+  const others = mainCats.filter(c => c.slug !== 'novidades');
   const displayCategories = [...others, ...novidades];
 
   return (

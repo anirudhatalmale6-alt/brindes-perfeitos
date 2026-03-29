@@ -9,7 +9,13 @@ import ProductCard from '@/components/products/ProductCard';
 
 interface Product {
   id: number; name: string; slug: string; image_main: string;
-  category_name: string; supplier: string; is_new: number; is_featured: number;
+  category_name: string; supplier: string; supplier_sku: string | null;
+  min_order: number | null; is_new: number; is_featured: number;
+}
+
+interface Category {
+  id: number; name: string; slug: string; parent_id: number | null;
+  parent_name: string | null; parent_slug: string | null;
 }
 
 export default function CategoryPage() {
@@ -19,19 +25,25 @@ export default function CategoryPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [categoryName, setCategoryName] = useState('');
+  const [category, setCategory] = useState<Category | null>(null);
+  const [subcategories, setSubcategories] = useState<{ id: number; name: string; slug: string; product_count: number }[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    // First get category ID from slug
     const catRes = await fetch('/api/categories');
     const cats = await catRes.json();
-    const cat = cats.find((c: { slug: string }) => c.slug === slug);
+    const cat = cats.find((c: Category) => c.slug === slug);
 
     if (cat) {
-      setCategoryName(cat.name);
-      const params = new URLSearchParams({ page: String(page), limit: '24', category: String(cat.id), active: '1' });
-      const res = await fetch(`/api/products?${params}`);
+      setCategory(cat);
+
+      // Find subcategories if this is a parent category
+      const subs = cats.filter((c: Category & { product_count: number }) => c.parent_id === cat.id);
+      setSubcategories(subs);
+
+      // Load products (API will include subcategory products for parent categories)
+      const p = new URLSearchParams({ page: String(page), limit: '24', category: String(cat.id), active: '1' });
+      const res = await fetch(`/api/products?${p}`);
       const data = await res.json();
       setProducts(data.products);
       setTotal(data.total);
@@ -52,12 +64,36 @@ export default function CategoryPage() {
             <Link href="/" className="hover:text-lime-600">Inicio</Link>
             <span className="mx-2">/</span>
             <Link href="/categorias" className="hover:text-lime-600">Categorias</Link>
+            {category?.parent_name && (
+              <>
+                <span className="mx-2">/</span>
+                <Link href={`/categorias/${category.parent_slug}`} className="hover:text-lime-600">
+                  {category.parent_name}
+                </Link>
+              </>
+            )}
             <span className="mx-2">/</span>
-            <span className="text-gray-900">{categoryName}</span>
+            <span className="text-gray-900">{category?.name || ''}</span>
           </nav>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{categoryName}</h1>
-          <p className="text-gray-500 mb-8">{total} produtos encontrados</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{category?.name || ''}</h1>
+          <p className="text-gray-500 mb-6">{total} produtos encontrados</p>
+
+          {/* Subcategory navigation */}
+          {subcategories.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              <Link href={`/categorias/${slug}`}
+                className="px-4 py-2 rounded-full text-sm font-medium bg-lime-600 text-white">
+                Todos ({total})
+              </Link>
+              {subcategories.map(sub => (
+                <Link key={sub.id} href={`/categorias/${sub.slug}`}
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:border-lime-500 hover:text-lime-600 transition-colors">
+                  {sub.name} ({sub.product_count})
+                </Link>
+              ))}
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center py-16 text-gray-500">Carregando...</div>

@@ -26,8 +26,12 @@ export async function GET(request: NextRequest) {
     params.push(`%${search}%`, `%${search}%`);
   }
   if (category) {
-    where += ' AND (p.category_id = ? OR pc.category_id = ?)';
-    params.push(category, category);
+    // Include products from subcategories when filtering by parent category
+    const subCatIds = db.prepare('SELECT id FROM categories WHERE parent_id = ?').all(category) as { id: number }[];
+    const allCatIds = [Number(category), ...subCatIds.map(s => s.id)];
+    const placeholders = allCatIds.map(() => '?').join(',');
+    where += ` AND (p.category_id IN (${placeholders}) OR pc.category_id IN (${placeholders}))`;
+    params.push(...allCatIds, ...allCatIds);
   }
   if (supplier) {
     where += ' AND p.supplier = ?';

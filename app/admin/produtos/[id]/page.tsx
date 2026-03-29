@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
-interface Category { id: number; name: string; }
+interface Category { id: number; name: string; parent_id: number | null; }
 
 export default function EditProduct() {
   const router = useRouter();
@@ -101,7 +101,14 @@ export default function EditProduct() {
             <select value={form.category_id} onChange={e => updateField('category_id', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg">
               <option value="">Selecione...</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {categories.filter(c => !c.parent_id).map(main => (
+                <optgroup key={main.id} label={main.name}>
+                  <option value={main.id}>{main.name} (geral)</option>
+                  {categories.filter(c => c.parent_id === main.id).map(sub => (
+                    <option key={sub.id} value={sub.id}>{sub.name}</option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
           <div>
