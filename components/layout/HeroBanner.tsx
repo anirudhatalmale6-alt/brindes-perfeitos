@@ -8,61 +8,73 @@ interface Slide {
   title: string;
   subtitle?: string;
   cta_text?: string;
-  cta_link?: string;
+  link_url?: string;
   image_url?: string;
-  bg_color?: string;
 }
 
 interface HeroBannerProps {
-  slides?: Slide[];
   totalProducts?: number;
 }
 
 const defaultSlides: Slide[] = [
   {
-    id: 1,
+    id: -1,
     title: 'Brindes Promocionais Personalizados',
     subtitle: 'Encontre o brinde perfeito para sua empresa. Melhor qualidade, melhor preco e melhor servico.',
     cta_text: 'Ver Catalogo',
-    cta_link: '/catalogo',
+    link_url: '/catalogo',
   },
   {
-    id: 2,
+    id: -2,
     title: 'Monte seu Carrinho',
     subtitle: 'Personalizacao com a sua marca. Milhares de opcoes para sua empresa se destacar.',
     cta_text: 'Adicionar ao Carrinho',
-    cta_link: '/contato',
+    link_url: '/carrinho',
   },
   {
-    id: 3,
+    id: -3,
     title: 'Novidades Toda Semana',
     subtitle: 'Confira os produtos mais recentes adicionados ao nosso catalogo promocional.',
     cta_text: 'Ver Novidades',
-    cta_link: '/categorias/novidades',
+    link_url: '/categorias/novidades',
   },
 ];
 
-export default function HeroBanner({ slides, totalProducts }: HeroBannerProps) {
-  const allSlides = slides && slides.length > 0 ? slides : defaultSlides;
+export default function HeroBanner({ totalProducts }: HeroBannerProps) {
+  const [slides, setSlides] = useState<Slide[]>(defaultSlides);
   const [current, setCurrent] = useState(0);
 
+  // Load banners from DB
+  useEffect(() => {
+    fetch('/api/banners')
+      .then(r => r.json())
+      .then((banners: Slide[]) => {
+        const active = banners.filter((b: Slide & { is_active?: number }) => (b as { is_active: number }).is_active !== 0);
+        if (active.length > 0) {
+          setSlides(active);
+          setCurrent(0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const next = useCallback(() => {
-    setCurrent(c => (c + 1) % allSlides.length);
-  }, [allSlides.length]);
+    setCurrent(c => (c + 1) % slides.length);
+  }, [slides.length]);
 
   const prev = useCallback(() => {
-    setCurrent(c => (c - 1 + allSlides.length) % allSlides.length);
-  }, [allSlides.length]);
+    setCurrent(c => (c - 1 + slides.length) % slides.length);
+  }, [slides.length]);
 
   useEffect(() => {
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
   }, [next]);
 
-  const slide = allSlides[current];
+  const slide = slides[current];
 
-  return (
-    <section className="relative w-full" style={{ aspectRatio: '1920 / 500' }}>
+  const content = (
+    <>
       {/* Background */}
       {slide.image_url ? (
         <img
@@ -90,24 +102,33 @@ export default function HeroBanner({ slides, totalProducts }: HeroBannerProps) {
                 {totalProducts && totalProducts > 0 ? ` Mais de ${totalProducts.toLocaleString('pt-BR')} produtos disponiveis.` : ''}
               </p>
             )}
-            {slide.cta_text && slide.cta_link && (
-              <Link
-                href={slide.cta_link}
-                className="inline-block bg-amber-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg font-semibold hover:bg-amber-600 text-sm md:text-lg shadow-lg"
-              >
+            {slide.cta_text && (
+              <span className="inline-block bg-amber-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg font-semibold hover:bg-amber-600 text-sm md:text-lg shadow-lg">
                 {slide.cta_text}
-              </Link>
+              </span>
             )}
           </div>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <section className="relative w-full" style={{ aspectRatio: '1920 / 500' }}>
+      {slide.link_url ? (
+        <Link href={slide.link_url} className="block absolute inset-0">
+          {content}
+        </Link>
+      ) : (
+        content
+      )}
 
       {/* Navigation Arrows */}
-      {allSlides.length > 1 && (
+      {slides.length > 1 && (
         <>
           <button
-            onClick={prev}
-            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors z-10"
             aria-label="Anterior"
           >
             <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,8 +136,8 @@ export default function HeroBanner({ slides, totalProducts }: HeroBannerProps) {
             </svg>
           </button>
           <button
-            onClick={next}
-            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors z-10"
             aria-label="Proximo"
           >
             <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,12 +148,12 @@ export default function HeroBanner({ slides, totalProducts }: HeroBannerProps) {
       )}
 
       {/* Dots */}
-      {allSlides.length > 1 && (
-        <div className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {allSlides.map((_, i) => (
+      {slides.length > 1 && (
+        <div className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => setCurrent(i)}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrent(i); }}
               className={`w-2.5 h-2.5 md:w-3 md:h-3 rounded-full transition-colors ${
                 i === current ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
               }`}

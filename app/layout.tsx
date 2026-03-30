@@ -7,6 +7,12 @@ export const metadata: Metadata = {
     default: "Brindes Perfeitos - Brindes Promocionais Personalizados",
     template: "%s | Brindes Perfeitos",
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+  },
   description: "Catalogo completo de brindes promocionais personalizados para sua empresa. Melhor qualidade, melhor preco e melhor servico. Canetas, mochilas, chaveiros, squeezes e mais de 1.000 produtos personalizados dos melhores fornecedores do Brasil.",
   keywords: "brindes promocionais, brindes personalizados, brindes corporativos, brindes empresariais, canetas personalizadas, mochilas personalizadas, chaveiros personalizados, squeezes personalizadas, produtos promocionais, brindes para empresas, melhor qualidade, melhor preco, melhor servico, best quality, best price, best service",
   openGraph: {
