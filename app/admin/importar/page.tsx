@@ -21,10 +21,10 @@ export default function AdminImport() {
   const [importingXbz, setImportingXbz] = useState(false);
   const [runs, setRuns] = useState<ImportRun[]>([]);
   const [statusMsg, setStatusMsg] = useState('');
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [csvImporting, setCsvImporting] = useState(false);
-  const [progress, setProgress] = useState<ImportProgress['progress'] | null>(null);
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const [spotProgress, setSpotProgress] = useState<ImportProgress['progress'] | null>(null);
+  const [xbzProgress, setXbzProgress] = useState<ImportProgress['progress'] | null>(null);
+  const spotPollRef = useRef<NodeJS.Timeout | null>(null);
+  const xbzPollRef = useRef<NodeJS.Timeout | null>(null);
 
   async function loadRuns() {
     try {
@@ -33,22 +33,47 @@ export default function AdminImport() {
     } catch { /* ignore */ }
   }
 
-  useEffect(() => { loadRuns(); return () => { if (pollRef.current) clearInterval(pollRef.current); }; }, []);
+  useEffect(() => {
+    loadRuns();
+    return () => {
+      if (spotPollRef.current) clearInterval(spotPollRef.current);
+      if (xbzPollRef.current) clearInterval(xbzPollRef.current);
+    };
+  }, []);
 
-  function startPolling() {
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
+  function startSpotPolling() {
+    if (spotPollRef.current) clearInterval(spotPollRef.current);
+    spotPollRef.current = setInterval(async () => {
       try {
         const res = await fetch('/api/import/spotgifts');
         if (res.ok) {
           const data: ImportProgress = await res.json();
-          setProgress(data.progress);
+          setSpotProgress(data.progress);
           if (!data.running && data.progress.status !== 'idle') {
-            // Import finished
-            clearInterval(pollRef.current!);
-            pollRef.current = null;
+            clearInterval(spotPollRef.current!);
+            spotPollRef.current = null;
             setImportingSpot(false);
-            setStatusMsg(`Importacao concluida: ${data.progress.added} novos, ${data.progress.updated} atualizados, ${data.progress.errors} erros`);
+            setStatusMsg(`SpotGifts concluido: ${data.progress.added} novos, ${data.progress.updated} atualizados, ${data.progress.errors} erros`);
+            loadRuns();
+          }
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+  }
+
+  function startXbzPolling() {
+    if (xbzPollRef.current) clearInterval(xbzPollRef.current);
+    xbzPollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch('/api/import/xbzbrindes');
+        if (res.ok) {
+          const data: ImportProgress = await res.json();
+          setXbzProgress(data.progress);
+          if (!data.running && data.progress.status !== 'idle') {
+            clearInterval(xbzPollRef.current!);
+            xbzPollRef.current = null;
+            setImportingXbz(false);
+            setStatusMsg(`XBZ Brindes concluido: ${data.progress.added} novos, ${data.progress.updated} atualizados, ${data.progress.errors} erros`);
             loadRuns();
           }
         }
@@ -59,12 +84,12 @@ export default function AdminImport() {
   async function triggerSpotImport() {
     setImportingSpot(true);
     setStatusMsg('Iniciando importacao SpotGifts... Isso pode levar alguns minutos.');
-    setProgress({ total: 0, processed: 0, added: 0, updated: 0, errors: 0, status: 'starting' });
+    setSpotProgress({ total: 0, processed: 0, added: 0, updated: 0, errors: 0, status: 'starting' });
     try {
       const res = await fetch('/api/import/spotgifts', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        startPolling();
+        startSpotPolling();
       } else {
         setStatusMsg(`Erro: ${data.error}`);
         setImportingSpot(false);
@@ -77,45 +102,21 @@ export default function AdminImport() {
 
   async function triggerXbzImport() {
     setImportingXbz(true);
-    setStatusMsg('Iniciando importacao XBZ Brindes...');
+    setStatusMsg('Iniciando importacao XBZ Brindes via API... Isso pode levar alguns minutos.');
+    setXbzProgress({ total: 0, processed: 0, added: 0, updated: 0, errors: 0, status: 'starting' });
     try {
       const res = await fetch('/api/import/xbzbrindes', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setStatusMsg(`XBZ importado: ${data.new_added} novos, ${data.updated} atualizados`);
+        startXbzPolling();
       } else {
         setStatusMsg(`Erro: ${data.error}`);
+        setImportingXbz(false);
       }
     } catch (err) {
       setStatusMsg(`Erro na importacao: ${err}`);
+      setImportingXbz(false);
     }
-    setImportingXbz(false);
-    loadRuns();
-  }
-
-  async function handleCsvImport(e: React.FormEvent) {
-    e.preventDefault();
-    if (!csvFile) return;
-    setCsvImporting(true);
-    setStatusMsg('Importando CSV...');
-
-    const formData = new FormData();
-    formData.append('file', csvFile);
-
-    try {
-      const res = await fetch('/api/import/xbzbrindes', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.success) {
-        setStatusMsg(`CSV importado: ${data.new_added} novos, ${data.updated} atualizados`);
-      } else {
-        setStatusMsg(`Erro: ${data.error}`);
-      }
-    } catch (err) {
-      setStatusMsg(`Erro: ${err}`);
-    }
-    setCsvImporting(false);
-    setCsvFile(null);
-    loadRuns();
   }
 
   return (
@@ -126,23 +127,44 @@ export default function AdminImport() {
         <div className="mb-6 p-4 bg-lime-50 text-lime-800 rounded-lg text-sm">{statusMsg}</div>
       )}
 
-      {/* Progress bar */}
-      {importingSpot && progress && (
+      {/* SpotGifts Progress */}
+      {importingSpot && spotProgress && (
         <div className="mb-6 bg-white rounded-lg shadow p-6">
           <div className="flex justify-between text-sm text-gray-600 mb-2">
             <span>Importando SpotGifts...</span>
-            <span>{progress.processed} produtos processados</span>
+            <span>{spotProgress.processed} produtos processados</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div
               className="bg-green-600 h-3 rounded-full transition-all duration-500"
-              style={{ width: progress.total > 0 ? `${Math.min(100, (progress.processed / Math.max(progress.total, 1)) * 100)}%` : '5%' }}
+              style={{ width: spotProgress.total > 0 ? `${Math.min(100, (spotProgress.processed / Math.max(spotProgress.total, 1)) * 100)}%` : '5%' }}
             />
           </div>
           <div className="flex gap-4 mt-2 text-xs text-gray-500">
-            <span>Novos: {progress.added}</span>
-            <span>Atualizados: {progress.updated}</span>
-            <span>Erros: {progress.errors}</span>
+            <span>Novos: {spotProgress.added}</span>
+            <span>Atualizados: {spotProgress.updated}</span>
+            <span>Erros: {spotProgress.errors}</span>
+          </div>
+        </div>
+      )}
+
+      {/* XBZ Progress */}
+      {importingXbz && xbzProgress && (
+        <div className="mb-6 bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Importando XBZ Brindes...</span>
+            <span>{xbzProgress.processed} / {xbzProgress.total > 0 ? xbzProgress.total : '...'} produtos</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div
+              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: xbzProgress.total > 0 ? `${Math.min(100, (xbzProgress.processed / Math.max(xbzProgress.total, 1)) * 100)}%` : '5%' }}
+            />
+          </div>
+          <div className="flex gap-4 mt-2 text-xs text-gray-500">
+            <span>Novos: {xbzProgress.added}</span>
+            <span>Atualizados: {xbzProgress.updated}</span>
+            <span>Erros: {xbzProgress.errors}</span>
           </div>
         </div>
       )}
@@ -168,27 +190,16 @@ export default function AdminImport() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-2">XBZ Brindes</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Site protegido por Cloudflare. Use importacao CSV ou solicite acesso API ao fornecedor.
+            Importar catalogo completo via API XBZ.
+            Aproximadamente 3.467 produtos (10.796 variacoes de cor).
+            A importacao roda em segundo plano.
           </p>
-          <form onSubmit={handleCsvImport} className="space-y-3">
-            <input
-              type="file" accept=".csv,.xlsx,.xls"
-              onChange={e => setCsvFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-lime-50 file:text-lime-700 hover:file:bg-lime-100"
-            />
-            <button
-              type="submit" disabled={!csvFile || csvImporting}
-              className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 disabled:opacity-50 text-sm"
-            >
-              {csvImporting ? 'Importando...' : 'Importar CSV'}
-            </button>
-          </form>
           <button
             onClick={triggerXbzImport}
             disabled={importingXbz}
-            className="mt-3 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50 text-sm"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
           >
-            {importingXbz ? 'Importando...' : 'Tentar Scraping XBZ'}
+            {importingXbz ? 'Importando...' : 'Importar XBZ Brindes'}
           </button>
         </div>
       </div>
@@ -232,18 +243,6 @@ export default function AdminImport() {
             </tbody>
           </table>
         )}
-      </div>
-
-      {/* CSV Format Guide */}
-      <div className="mt-6 bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-3">Formato CSV para Importacao</h2>
-        <p className="text-sm text-gray-600 mb-2">O arquivo CSV deve conter as seguintes colunas:</p>
-        <code className="text-xs bg-gray-100 p-3 rounded block">
-          sku,nome,descricao,categoria,imagem_url,material,dimensoes,peso,cores,pedido_minimo
-        </code>
-        <p className="text-sm text-gray-500 mt-2">
-          Codificacao: UTF-8 | Separador: virgula | Aspas: duplas para textos com virgula
-        </p>
       </div>
     </div>
   );

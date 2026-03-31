@@ -1,76 +1,160 @@
 import { BaseImporter, ProductData } from './base-importer';
 
-// XBZ Brindes is behind Cloudflare, so we primarily support CSV import
-// and provide a Playwright-based scraper as secondary option
+interface XbzProduct {
+  IdProduto: number;
+  CodigoXbz: string;
+  CodigoComposto: string;
+  CodigoAmigavel: string;
+  Nome: string;
+  Descricao: string;
+  SiteLink: string;
+  ImageLink: string;
+  WebTipo: string;
+  WebSubTipo: string;
+  CorWebPrincipal: string;
+  CorWebSecundaria: string;
+  Peso: number;
+  Altura: number;
+  Largura: number;
+  Profundidade: number;
+  PrecoVenda: number;
+  QuantidadeDisponivel: number;
+  QuantidadeDisponivelEstoquePrincipal: number;
+  Ncm: string;
+}
+
+const XBZ_API_URL = 'https://api.minhaxbz.com.br:5001/api/clientes/GetListaDeProdutos';
+const XBZ_CNPJ = '14441490000176';
+const XBZ_TOKEN = 'XF9D5AD1E2';
+
+// Map XBZ color names to hex codes
+const COLOR_HEX_MAP: Record<string, string> = {
+  'AZUL': '#3B82F6',
+  'AMARELO': '#EAB308',
+  'BRANCO': '#FFFFFF',
+  'PRETO': '#000000',
+  'VERMELHO': '#EF4444',
+  'VERDE': '#22C55E',
+  'ROSA': '#EC4899',
+  'ROXO': '#A855F7',
+  'LARANJA': '#F97316',
+  'CINZA': '#6B7280',
+  'CHUMBO': '#4B5563',
+  'MARROM': '#92400E',
+  'DOURADO': '#D4A843',
+  'PRATA': '#C0C0C0',
+  'BEGE': '#D2B48C',
+  'BRONZE': '#CD7F32',
+  'INOX': '#D1D5DB',
+  'KRAFT': '#C4A882',
+  'BAMBU': '#D4A76A',
+  'MADEIRA': '#8B6914',
+  'COBRE': '#B87333',
+  'TRANSPARENTE': '#E5E7EB',
+  'COLORIDO': '#8B5CF6',
+};
+
+// Category mapping based on product names
+function guessCategory(name: string): string {
+  const n = name.toUpperCase();
+  if (n.includes('CANETA') || n.includes('ESFEROGRAFICA') || n.includes('LAPISEIRA')) return 'Canetas';
+  if (n.includes('CANECA') || n.includes('COPO') || n.includes('XICARA')) return 'Canecas e Copos';
+  if (n.includes('GARRAFA') || n.includes('SQUEEZE') || n.includes('CANTIL') || n.includes('WHISKY')) return 'Garrafas e Squeezes';
+  if (n.includes('MOCHILA') || n.includes('BOLSA') || n.includes('MALA') || n.includes('NECESSAIRE') || n.includes('POCHETE') || n.includes('SACOLA')) return 'Mochilas e Bolsas';
+  if (n.includes('CAMISETA') || n.includes('CAMISA') || n.includes('BONE') || n.includes('CHAPEU') || n.includes('AVENTAL')) return 'Vestuario';
+  if (n.includes('CADERNO') || n.includes('BLOCO') || n.includes('AGENDA') || n.includes('PASTA')) return 'Cadernos e Blocos';
+  if (n.includes('CHAVE') || n.includes('CHAVEIRO')) return 'Chaveiros';
+  if (n.includes('RELOGIO') || n.includes('SMARTWATCH')) return 'Relogios';
+  if (n.includes('CAIXA DE SOM') || n.includes('FONE') || n.includes('SPEAKER') || n.includes('EARBUDS') || n.includes('HEADPHONE')) return 'Audio';
+  if (n.includes('CARREGADOR') || n.includes('POWERBANK') || n.includes('POWER BANK') || n.includes('CABO USB') || n.includes('HUB USB')) return 'Tecnologia';
+  if (n.includes('PEN DRIVE') || n.includes('PENDRIVE') || n.includes('CARTAO USB')) return 'Pen Drives';
+  if (n.includes('GUARDA-CHUVA') || n.includes('SOMBRINHA')) return 'Guarda-Chuvas';
+  if (n.includes('TOALHA') || n.includes('ROUPAO')) return 'Toalhas';
+  if (n.includes('CHURRASCO') || n.includes('KIT VINHO') || n.includes('KIT QUEIJO') || n.includes('TABUA')) return 'Kit Churrasco e Vinho';
+  if (n.includes('ESPELHO') || n.includes('LIXA') || n.includes('CORTADOR') || n.includes('KIT MANICURE') || n.includes('NECESSAIRE')) return 'Beleza e Cuidados';
+  if (n.includes('LANTERNA') || n.includes('LUMINARIA') || n.includes('LED')) return 'Iluminacao';
+  if (n.includes('MOUSEPAD') || n.includes('MOUSE PAD') || n.includes('SUPORTE CELULAR') || n.includes('SUPORTE NOTEBOOK')) return 'Acessorios de Escritorio';
+  if (n.includes('GALAO') || n.includes('POTE') || n.includes('MARMITA') || n.includes('LANCHEIRA')) return 'Utilidades';
+  return 'Brindes Diversos';
+}
 
 export class XbzBrindesImporter extends BaseImporter {
-  private csvData: string[][] = [];
-
   constructor() {
     super('xbzbrindes');
   }
 
-  setCsvData(data: string[][]) {
-    this.csvData = data;
-  }
-
   async *fetchProducts(): AsyncGenerator<ProductData> {
-    if (this.csvData.length === 0) {
-      this.stats.error_log.push('XBZ Brindes requires CSV import (site is behind Cloudflare)');
-      return;
+    // Fetch all products from XBZ API
+    const url = `${XBZ_API_URL}?cnpj=${XBZ_CNPJ}&token=${XBZ_TOKEN}`;
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`XBZ API error: HTTP ${response.status}`);
     }
 
-    // Parse CSV - expected columns:
-    // sku, nome, descricao, categoria, imagem_url, material, dimensoes, peso, cores, pedido_minimo
-    const headers = this.csvData[0].map(h => h.toLowerCase().trim());
-    const skuIdx = headers.indexOf('sku');
-    const nameIdx = headers.indexOf('nome');
-    const descIdx = headers.indexOf('descricao');
-    const catIdx = headers.indexOf('categoria');
-    const imgIdx = headers.indexOf('imagem_url');
-    const matIdx = headers.indexOf('material');
-    const dimIdx = headers.indexOf('dimensoes');
-    const weightIdx = headers.indexOf('peso');
-    const colorsIdx = headers.indexOf('cores');
-    const minIdx = headers.indexOf('pedido_minimo');
+    const allProducts: XbzProduct[] = await response.json();
 
-    for (let i = 1; i < this.csvData.length; i++) {
-      const row = this.csvData[i];
-      if (!row || row.length < 2) continue;
+    // Group products by CodigoAmigavel (same product, different colors)
+    const grouped = new Map<string, XbzProduct[]>();
+    for (const p of allProducts) {
+      const key = p.CodigoAmigavel;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key)!.push(p);
+    }
 
-      const sku = skuIdx >= 0 ? row[skuIdx]?.trim() : String(i);
-      const name = nameIdx >= 0 ? row[nameIdx]?.trim() : '';
+    // Yield one product per group with all color variants
+    const entries = Array.from(grouped.entries());
+    for (const [code, variants] of entries) {
+      const primary = variants[0];
 
-      if (!name) continue;
+      // Collect all colors from variants
+      const colorSet = new Map<string, { name: string; hex?: string }>();
+      let totalStock = 0;
+      const images: string[] = [];
 
-      const specs: Record<string, string> = {};
-      if (matIdx >= 0 && row[matIdx]) specs['Material'] = row[matIdx].trim();
-      if (dimIdx >= 0 && row[dimIdx]) specs['Dimensoes'] = row[dimIdx].trim();
-      if (weightIdx >= 0 && row[weightIdx]) specs['Peso'] = row[weightIdx].trim();
-
-      const colors = colorsIdx >= 0 && row[colorsIdx]
-        ? row[colorsIdx].split(/[,;]/).map(c => ({ name: c.trim() })).filter(c => c.name)
-        : undefined;
-
-      const imageMain = imgIdx >= 0 ? row[imgIdx]?.trim() : '';
-
-      // Download image if URL provided
-      let localImage = imageMain;
-      if (imageMain && imageMain.startsWith('http')) {
-        const ext = imageMain.match(/\.\w+$/)?.[0] || '.jpg';
-        localImage = await this.downloadImage(imageMain, `${sku}_main${ext}`);
+      for (const v of variants) {
+        if (v.CorWebPrincipal && !colorSet.has(v.CorWebPrincipal)) {
+          colorSet.set(v.CorWebPrincipal, {
+            name: v.CorWebPrincipal,
+            hex: COLOR_HEX_MAP[v.CorWebPrincipal.trim()] || undefined,
+          });
+        }
+        if (v.QuantidadeDisponivel > 0) {
+          totalStock += v.QuantidadeDisponivel;
+        }
+        if (v.ImageLink && !images.includes(v.ImageLink)) {
+          images.push(v.ImageLink);
+        }
       }
 
+      const colors = Array.from(colorSet.values());
+
+      // Build specs
+      const specs: Record<string, string> = {};
+      if (primary.Peso > 0) specs['Peso'] = `${primary.Peso}g`;
+      if (primary.Altura > 0 && primary.Largura > 0) {
+        const dims = [primary.Altura, primary.Largura];
+        if (primary.Profundidade > 0) dims.push(primary.Profundidade);
+        specs['Dimensoes'] = dims.map(d => `${d}cm`).join(' x ');
+      }
+      if (totalStock > 0) specs['Estoque'] = `${totalStock} unidades`;
+      if (primary.Ncm) specs['NCM'] = primary.Ncm;
+
+      const categoryName = guessCategory(primary.Nome);
+
       yield {
-        supplier_sku: sku,
-        name,
-        description: descIdx >= 0 ? row[descIdx]?.trim() : undefined,
-        category_name: catIdx >= 0 ? row[catIdx]?.trim() : undefined,
+        supplier_sku: code,
+        name: primary.Nome,
+        description: primary.Descricao,
+        category_name: categoryName,
         specs: Object.keys(specs).length > 0 ? specs : undefined,
-        colors,
-        image_main: localImage || undefined,
-        min_order: minIdx >= 0 && row[minIdx] ? parseInt(row[minIdx]) : undefined,
-        source_url: `https://www.xbzbrindes.com.br/produto/${sku}`,
+        colors: colors.length > 0 ? colors : undefined,
+        image_main: primary.ImageLink || undefined,
+        images: images.length > 1 ? images : undefined,
+        units_per_box: totalStock > 0 ? totalStock : undefined,
+        source_url: primary.SiteLink || `https://www.xbzbrindes.com.br/${code}`,
       };
     }
   }
