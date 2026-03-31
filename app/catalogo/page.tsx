@@ -9,7 +9,9 @@ import ProductCard from '@/components/products/ProductCard';
 
 interface Product {
   id: number; name: string; slug: string; image_main: string;
-  category_name: string; supplier: string; supplier_sku: string | null; min_order: number | null; is_new: number; is_featured: number;
+  category_name: string; supplier: string; supplier_sku: string | null; min_order: number | null;
+  colors: string | null; units_per_box: number | null; price: number | null;
+  is_new: number; is_featured: number;
 }
 
 interface Category { id: number; name: string; slug: string; parent_id: number | null; product_count: number; }

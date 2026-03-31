@@ -11,7 +11,7 @@ interface Product {
   id: number; name: string; slug: string; image_main: string;
   category_name: string; supplier: string; supplier_sku: string | null;
   min_order: number | null; is_new: number; is_featured: number;
-  colors: string | null; units_per_box: number | null;
+  colors: string | null; units_per_box: number | null; price: number | null;
 }
 
 interface Category {
@@ -46,7 +46,6 @@ export default function CategoryPage() {
   const [subcategories, setSubcategories] = useState<{ id: number; name: string; slug: string; product_count: number }[]>([]);
   const [selectedColor, setSelectedColor] = useState('');
   const [sort, setSort] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -121,7 +120,7 @@ export default function CategoryPage() {
 
           {/* Filters bar */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4 mb-4">
               {/* Sort */}
               <select
                 value={sort}
@@ -134,17 +133,6 @@ export default function CategoryPage() {
                 <option value="newest">Mais recentes</option>
                 <option value="stock_desc">Maior estoque</option>
               </select>
-
-              {/* Filter toggle for mobile */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:border-lime-500"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filtrar{selectedColor ? ' (1)' : ''}
-              </button>
 
               {/* Active filter badge */}
               {selectedColor && (
@@ -162,31 +150,29 @@ export default function CategoryPage() {
               )}
             </div>
 
-            {/* Expanded filters */}
-            {showFilters && (
-              <div className="mt-4 pt-4 border-t">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Cor</h3>
-                <div className="flex flex-wrap gap-2">
-                  {ALL_COLORS.map(color => (
-                    <button
-                      key={color.name}
-                      onClick={() => handleColorFilter(color.name)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
-                        selectedColor === color.name
-                          ? 'border-lime-500 bg-lime-50 text-lime-700'
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
-                      <span
-                        className="w-4 h-4 rounded-full border border-gray-300 inline-block"
-                        style={{ backgroundColor: color.hex }}
-                      />
-                      {color.name}
-                    </button>
-                  ))}
-                </div>
+            {/* Color filter - always visible */}
+            <div className="pt-3 border-t">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Filtrar por cor</h3>
+              <div className="flex flex-wrap gap-2">
+                {ALL_COLORS.map(color => (
+                  <button
+                    key={color.name}
+                    onClick={() => handleColorFilter(color.name)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                      selectedColor === color.name
+                        ? 'border-lime-500 bg-lime-50 text-lime-700'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
+                    }`}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border border-gray-300 inline-block"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                    {color.name}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
           </div>
 
           {loading ? (

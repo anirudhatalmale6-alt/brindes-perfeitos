@@ -170,6 +170,7 @@ export class XbzBrindesImporter extends BaseImporter {
         image_main: primary.ImageLink || undefined,
         images: images.length > 1 ? images : undefined,
         units_per_box: totalStock > 0 ? totalStock : undefined,
+        price: primary.PrecoVenda > 0 ? primary.PrecoVenda : undefined,
         source_url: primary.SiteLink || `https://www.xbzbrindes.com.br/${code}`,
       };
     }

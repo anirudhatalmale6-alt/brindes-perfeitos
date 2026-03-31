@@ -19,6 +19,7 @@ export interface ProductData {
   box_dimensions?: string;
   personalization_techniques?: string[];
   source_url?: string;
+  price?: number;
 }
 
 export interface ImportStats {
@@ -93,7 +94,7 @@ export abstract class BaseImporter {
           UPDATE products SET name = ?, short_description = ?, description = ?, category_id = ?,
           specs = ?, colors = ?, image_main = ?, images = ?, min_order = ?, units_per_box = ?,
           box_weight = ?, box_dimensions = ?, personalization_techniques = ?,
-          source_url = ?, last_synced_at = datetime('now'), updated_at = datetime('now')
+          source_url = ?, price = ?, last_synced_at = datetime('now'), updated_at = datetime('now')
           WHERE id = ?
         `).run(
           data.name, data.short_description || null, data.description || null, categoryId,
@@ -104,7 +105,7 @@ export abstract class BaseImporter {
           data.min_order || null, data.units_per_box || null,
           data.box_weight || null, data.box_dimensions || null,
           data.personalization_techniques ? JSON.stringify(data.personalization_techniques) : null,
-          data.source_url || null, existing.id
+          data.source_url || null, data.price || null, existing.id
         );
         return 'updated';
       } else {
@@ -119,8 +120,8 @@ export abstract class BaseImporter {
         db.prepare(`
           INSERT INTO products (supplier, supplier_sku, name, slug, short_description, description, category_id,
           specs, colors, image_main, images, min_order, units_per_box, box_weight, box_dimensions,
-          personalization_techniques, source_url, is_active, is_new, last_synced_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'))
+          personalization_techniques, source_url, price, is_active, is_new, last_synced_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'))
         `).run(
           this.supplier, data.supplier_sku, data.name, finalSlug,
           data.short_description || null, data.description || null, categoryId,
@@ -131,7 +132,7 @@ export abstract class BaseImporter {
           data.min_order || null, data.units_per_box || null,
           data.box_weight || null, data.box_dimensions || null,
           data.personalization_techniques ? JSON.stringify(data.personalization_techniques) : null,
-          data.source_url || null
+          data.source_url || null, data.price || null
         );
         return 'new';
       }

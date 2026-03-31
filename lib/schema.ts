@@ -41,6 +41,7 @@ export function initializeDatabase() {
       box_dimensions TEXT,
       personalization_techniques TEXT,
       print_colors_max INTEGER,
+      price REAL,
       is_active INTEGER DEFAULT 1,
       is_featured INTEGER DEFAULT 0,
       is_new INTEGER DEFAULT 0,
@@ -129,6 +130,13 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
     CREATE INDEX IF NOT EXISTS idx_quote_requests_status ON quote_requests(status);
   `);
+
+  // Migrations: add price column if missing
+  try {
+    db.prepare('SELECT price FROM products LIMIT 1').get();
+  } catch {
+    db.exec('ALTER TABLE products ADD COLUMN price REAL');
+  }
 
   // Seed admin user if none exists
   const adminCount = db.prepare('SELECT COUNT(*) as count FROM admin_users').get() as { count: number };
