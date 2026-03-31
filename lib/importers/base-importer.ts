@@ -159,7 +159,7 @@ export abstract class BaseImporter {
     }
   }
 
-  async run(): Promise<ImportStats> {
+  async run(onProgress?: (stats: ImportStats) => void): Promise<ImportStats> {
     this.startRun();
     try {
       for await (const product of this.fetchProducts()) {
@@ -171,6 +171,7 @@ export abstract class BaseImporter {
           this.stats.errors++;
           this.stats.error_log.push(`Error processing SKU ${product.supplier_sku}: ${product.name}`);
         }
+        if (onProgress) onProgress(this.stats);
       }
       this.finishRun();
     } catch (err) {

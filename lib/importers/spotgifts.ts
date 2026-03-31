@@ -12,12 +12,6 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-interface CategoryInfo {
-  name: string;
-  url: string;
-  id: string;
-}
-
 export class SpotGiftsImporter extends BaseImporter {
   constructor() {
     super('spotgifts');
@@ -29,129 +23,195 @@ export class SpotGiftsImporter extends BaseImporter {
     return res.text();
   }
 
-  private async getCategories(): Promise<CategoryInfo[]> {
-    const html = await this.fetchPage(`${BASE_URL}/pt/catalogo/`);
-    const $ = cheerio.load(html);
-    const categories: CategoryInfo[] = [];
+  private async getProductUrlsFromSitemap(): Promise<{ url: string; sku: string; category: string }[]> {
+    const xml = await this.fetchPage(`${BASE_URL}/sitemap.xml`);
+    const $ = cheerio.load(xml, { xmlMode: true });
+    const products: { url: string; sku: string; category: string }[] = [];
 
-    // Parse category filters from the catalog page
-    $('a[href*="/pt/catalogo/"]').each((_, el) => {
-      const href = $(el).attr('href') || '';
-      const name = $(el).text().trim();
-      if (href && name && !href.includes('?') && href !== '/pt/catalogo/' && name.length > 1) {
-        const slug = href.replace('/pt/catalogo/', '').replace(/\/$/, '');
-        if (slug && !slug.includes('/') && slug.length > 2) {
-          categories.push({ name, url: `${BASE_URL}${href}`, id: slug });
-        }
-      }
-    });
-
-    // Deduplicate
-    const seen = new Set<string>();
-    return categories.filter(c => {
-      if (seen.has(c.id)) return false;
-      seen.add(c.id);
-      return true;
-    });
-  }
-
-  private async getProductListPage(categoryUrl: string, page: number): Promise<{ skus: string[]; hasMore: boolean }> {
-    const url = page > 1 ? `${categoryUrl}?page=${page}` : categoryUrl;
-    const html = await this.fetchPage(url);
-    const $ = cheerio.load(html);
-    const skus: string[] = [];
-
-    // Extract product links - pattern: /pt/catalogo/{category}/{sku}/
-    $('a[href*="/pt/catalogo/"]').each((_, el) => {
-      const href = $(el).attr('href') || '';
-      const match = href.match(/\/pt\/catalogo\/[^/]+\/(\d+)\//);
+    $('url loc').each((_, el) => {
+      const loc = $(el).text().trim();
+      const match = loc.match(/\/pt\/catalogo\/([^/]+)\/(\d+)\//);
       if (match) {
-        skus.push(match[1]);
+        products.push({
+          url: loc,
+          category: match[1],
+          sku: match[2],
+        });
       }
     });
 
-    // Deduplicate
-    const unique = Array.from(new Set(skus));
-
-    // Check if there's a next page link
-    const hasMore = $('a[href*="page="]').filter((_, el) => {
-      const href = $(el).attr('href') || '';
-      return href.includes(`page=${page + 1}`);
-    }).length > 0;
-
-    return { skus: unique, hasMore };
+    return products;
   }
 
-  private async getProductDetail(sku: string, categorySlug: string): Promise<ProductData | null> {
+  private categorySlugToName(slug: string): string {
+    const map: Record<string, string> = {
+      'esferograficas': 'Canetas Esferograficas',
+      'esferograficas-em-metal-e-outros': 'Canetas Metal',
+      'esferograficas-em-plastico': 'Canetas Plastico',
+      'conjuntos-de-escrita': 'Conjuntos de Escrita',
+      'conjuntos-com-2-postos': 'Conjuntos de Escrita',
+      'lapiseiras-e-lapis': 'Lapis e Lapiseiras',
+      'marcadores-e-fluorescentes': 'Marcadores',
+      'mochilas-para-pc-tablet': 'Mochilas',
+      'mochilas': 'Mochilas',
+      'pastas-para-pc-tablet': 'Pastas',
+      'pastas': 'Pastas',
+      'malas-de-viagem': 'Malas de Viagem',
+      'bolsas-de-desporto-e-viagem': 'Bolsas de Viagem',
+      'bolsas-termicas': 'Bolsas Termicas',
+      'sacolas': 'Sacolas',
+      'sacolas-em-non-woven': 'Sacolas',
+      'sacolas-em-algodao': 'Sacolas Algodao',
+      'sacolas-em-juta': 'Sacolas Juta',
+      'sacolas-em-papel': 'Sacolas Papel',
+      'guarda-chuvas': 'Guarda-Chuvas',
+      'guarda-sois': 'Guarda-Sois',
+      'squeezes': 'Squeezes',
+      'garrafas': 'Garrafas',
+      'copos-e-canecas': 'Copos e Canecas',
+      'jarras-e-infusores': 'Jarras e Infusores',
+      'sets-de-bar': 'Sets de Bar',
+      'conjuntos-de-churrasco': 'Churrasco',
+      'aventais': 'Aventais',
+      'chaveiros': 'Chaveiros',
+      'porta-cartoes': 'Porta Cartoes',
+      'cadernos': 'Cadernos',
+      'blocos-de-notas': 'Blocos de Notas',
+      'agendas-e-blocos': 'Agendas e Blocos',
+      'headphones-e-auscultadores': 'Fones de Ouvido',
+      'colunas-wireless': 'Caixas de Som',
+      'powerbanks': 'Power Banks',
+      'carregadores-wireless': 'Carregadores',
+      'hubs-usb': 'Hubs USB',
+      'pen-drives': 'Pen Drives',
+      'cartoes-usb': 'Pen Drives',
+      'bones-e-chapeus': 'Bones e Chapeus',
+      'toalhas': 'Toalhas',
+      'necessaires': 'Necessaires',
+      'carteiras': 'Carteiras',
+      'porta-passaportes': 'Porta Passaportes',
+      'almofadas-e-mantas': 'Almofadas e Mantas',
+      'anti-stress': 'Anti-Stress',
+      'puzzles-e-jogos': 'Jogos',
+      'ferramentas': 'Ferramentas',
+      'lanternas': 'Lanternas',
+      'kits-de-emergencia': 'Kits de Emergencia',
+      'porta-crachas-e-acessorios': 'Porta Crachas',
+      'oculos-de-sol': 'Oculos de Sol',
+    };
+    if (map[slug]) return map[slug];
+    return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  private async getProductDetail(url: string, sku: string, categorySlug: string): Promise<ProductData | null> {
     try {
-      const url = `${BASE_URL}/pt/catalogo/${categorySlug}/${sku}/`;
       const html = await this.fetchPage(url);
       const $ = cheerio.load(html);
 
+      // Product name from h1 or title
       const name = $('h1').first().text().trim() || $('title').text().split('|')[0].trim();
       if (!name) return null;
 
-      // Extract description
-      const description = $('.product-description, .description, [class*="descri"]').first().text().trim() ||
-        $('meta[name="description"]').attr('content') || '';
-
-      // Extract specs from table or list
-      const specs: Record<string, string> = {};
-      $('table tr, .specs li, .product-info li, .product-details li').each((_, el) => {
-        const cells = $(el).find('td, th');
-        if (cells.length >= 2) {
-          const key = $(cells[0]).text().trim();
-          const val = $(cells[1]).text().trim();
-          if (key && val) specs[key] = val;
-        }
-        // Also try colon-separated text
+      // Description - try multiple selectors
+      let description = '';
+      $('p, .description, [class*="descri"]').each((_, el) => {
         const text = $(el).text().trim();
-        const colonMatch = text.match(/^([^:]+):\s*(.+)$/);
-        if (colonMatch) specs[colonMatch[1].trim()] = colonMatch[2].trim();
-      });
-
-      // Extract images
-      const images: string[] = [];
-      $('img[src*="/fotos/"], img[src*="produto"], img[data-src*="/fotos/"]').each((_, el) => {
-        const src = $(el).attr('src') || $(el).attr('data-src') || '';
-        if (src && !src.includes('thumb') && !src.includes('icon')) {
-          const fullUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
-          images.push(fullUrl);
+        if (text.length > 30 && text.length < 2000 && !description) {
+          description = text;
         }
       });
+      if (!description) {
+        description = $('meta[name="description"]').attr('content') || '';
+      }
 
-      // Also check for gallery images
-      $('a[href*="/fotos/"], a[data-fancybox] img').each((_, el) => {
-        const src = $(el).attr('href') || $(el).find('img').attr('src') || '';
-        if (src && src.includes('/fotos/')) {
+      // Extract specs from all text content
+      const specs: Record<string, string> = {};
+      const pageText = $('body').text();
+
+      // Dimensions
+      const dimMatch = pageText.match(/(?:Dimensões?|Medidas?)[:\s]*([^\n]+)/i);
+      if (dimMatch) specs['Dimensoes'] = dimMatch[1].trim();
+
+      // Material
+      const matMatch = pageText.match(/(?:Material|Composição)[:\s]*([^\n]+)/i);
+      if (matMatch) specs['Material'] = matMatch[1].trim();
+
+      // Weight
+      const weightMatch = pageText.match(/(?:Peso)[:\s]*([^\n]+)/i);
+      if (weightMatch) specs['Peso'] = weightMatch[1].trim();
+
+      // Box units
+      const boxMatch = pageText.match(/(?:Embalagem exterior|Caixa exterior)[:\s]*(\d+)/i);
+      if (boxMatch) specs['Unidades por Caixa'] = boxMatch[1];
+
+      // Inner box
+      const innerMatch = pageText.match(/(?:Embalagem interior|Caixa interior)[:\s]*(\d+)/i);
+      if (innerMatch) specs['Unidades por Caixa Interna'] = innerMatch[1];
+
+      // Extract ALL image URLs
+      const images: string[] = [];
+      $('img').each((_, el) => {
+        const src = $(el).attr('src') || $(el).attr('data-src') || '';
+        if (src && src.includes('/fotos/produtos/')) {
           const fullUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
           if (!images.includes(fullUrl)) images.push(fullUrl);
         }
       });
 
-      // Extract colors
-      const colors: { name: string; code?: string }[] = [];
-      $('.color, .cor, [class*="color"] span, [class*="cor"] span').each((_, el) => {
-        const colorName = $(el).text().trim() || $(el).attr('title') || '';
-        if (colorName) colors.push({ name: colorName });
+      // Also check link hrefs for high-res images
+      $('a[href*="/fotos/"]').each((_, el) => {
+        const href = $(el).attr('href') || '';
+        if (href.includes('/fotos/produtos/')) {
+          const fullUrl = href.startsWith('http') ? href : `${BASE_URL}${href}`;
+          if (!images.includes(fullUrl)) images.push(fullUrl);
+        }
       });
 
-      // Try to download main image
-      let imageMain = images[0] || '';
-      if (imageMain) {
-        const ext = imageMain.match(/\.\w+$/)?.[0] || '.jpg';
-        imageMain = await this.downloadImage(imageMain, `${sku}_main${ext}`);
+      // If no images found, construct default URL pattern
+      if (images.length === 0) {
+        images.push(`${BASE_URL}/fotos/produtos/${sku}_set_2.jpg`);
       }
+
+      // Main image: prefer _set_2 (catalog image) or _set_1
+      let mainImage = images.find(i => i.includes('_set_2')) ||
+                      images.find(i => i.includes('_set_1')) ||
+                      images[0] || '';
+
+      // Use external URLs directly (don't download)
+      const imageMain = mainImage;
+      const additionalImages = images.filter(i => i !== mainImage);
+
+      // Extract colors
+      const colors: { name: string; code?: string }[] = [];
+      $('[class*="color"], [class*="cor"]').each((_, el) => {
+        const colorName = $(el).text().trim() || $(el).attr('title') || '';
+        if (colorName && colorName.length < 50) colors.push({ name: colorName });
+      });
+      // Also try from image alt/title attributes
+      $('img[alt*="cor"], img[title]').each((_, el) => {
+        const title = $(el).attr('title') || $(el).attr('alt') || '';
+        if (title && title.length < 50 && !colors.find(c => c.name === title)) {
+          colors.push({ name: title });
+        }
+      });
+
+      // Min order from box info
+      let minOrder: number | undefined;
+      const minMatch = pageText.match(/(?:Quantidade\s*m[ií]nima|Pedido\s*m[ií]nimo|M[ií]nimo)[:\s]*(\d+)/i);
+      if (minMatch) minOrder = parseInt(minMatch[1]);
+
+      const categoryName = this.categorySlugToName(categorySlug);
 
       return {
         supplier_sku: sku,
         name,
-        description,
-        category_name: categorySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        description: description || undefined,
+        category_name: categoryName,
         specs: Object.keys(specs).length > 0 ? specs : undefined,
         colors: colors.length > 0 ? colors : undefined,
         image_main: imageMain,
-        images: images.length > 1 ? images.slice(1) : undefined,
+        images: additionalImages.length > 0 ? additionalImages : undefined,
+        min_order: minOrder,
         source_url: url,
       };
     } catch (err) {
@@ -161,77 +221,22 @@ export class SpotGiftsImporter extends BaseImporter {
   }
 
   async *fetchProducts(): AsyncGenerator<ProductData> {
-    const categories = await this.getCategories();
+    // Get all product URLs from sitemap
+    const productUrls = await this.getProductUrlsFromSitemap();
 
-    if (categories.length === 0) {
-      // Fallback: try fetching from the main catalog page directly
-      const allSkus = new Set<string>();
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore && page <= 50) {
-        const url = `${BASE_URL}/pt/catalogo/?page=${page}`;
-        try {
-          const html = await this.fetchPage(url);
-          const $ = cheerio.load(html);
-          let found = 0;
-
-          $('a[href*="/pt/catalogo/"]').each((_, el) => {
-            const href = $(el).attr('href') || '';
-            const match = href.match(/\/pt\/catalogo\/([^/]+)\/(\d+)\//);
-            if (match && !allSkus.has(match[2])) {
-              allSkus.add(match[2]);
-              found++;
-            }
-          });
-
-          hasMore = found > 0;
-          page++;
-          await delay(1500);
-        } catch {
-          hasMore = false;
-        }
-      }
-
-      // Fetch details for each SKU
-      for (const sku of Array.from(allSkus)) {
-        const product = await this.getProductDetail(sku, 'catalogo');
-        if (product) yield product;
-        await delay(1000);
-      }
+    if (productUrls.length === 0) {
+      this.stats.error_log.push('No products found in sitemap');
       return;
     }
 
-    // Process each category
-    const allProcessed = new Set<string>();
-
-    for (const category of categories) {
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore && page <= 30) {
-        try {
-          const { skus, hasMore: more } = await this.getProductListPage(category.url, page);
-
-          for (const sku of skus) {
-            if (allProcessed.has(sku)) continue;
-            allProcessed.add(sku);
-
-            const product = await this.getProductDetail(sku, category.id);
-            if (product) {
-              product.category_name = category.name;
-              yield product;
-            }
-            await delay(1000 + Math.random() * 500);
-          }
-
-          hasMore = more && skus.length > 0;
-          page++;
-          await delay(1500);
-        } catch {
-          hasMore = false;
-        }
+    // Process each product
+    for (const { url, sku, category } of productUrls) {
+      const product = await this.getProductDetail(url, sku, category);
+      if (product) {
+        yield product;
       }
+      // Respectful delay between requests
+      await delay(800 + Math.random() * 400);
     }
   }
 }

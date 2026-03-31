@@ -1,11 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ImportRun {
   id: number; supplier: string; status: string; total_found: number;
   new_added: number; updated: number; errors: number; error_log: string;
   started_at: string; finished_at: string;
+}
+
+interface ImportProgress {
+  running: boolean;
+  progress: {
+    total: number; processed: number; added: number;
+    updated: number; errors: number; status: string;
+  };
 }
 
 export default function AdminImport() {
@@ -15,6 +23,8 @@ export default function AdminImport() {
   const [statusMsg, setStatusMsg] = useState('');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvImporting, setCsvImporting] = useState(false);
+  const [progress, setProgress] = useState<ImportProgress['progress'] | null>(null);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   async function loadRuns() {
     try {
@@ -23,24 +33,63 @@ export default function AdminImport() {
     } catch { /* ignore */ }
   }
 
-  useEffect(() => { loadRuns(); }, []);
+  useEffect(() => { loadRuns(); return () => { if (pollRef.current) clearInterval(pollRef.current); }; }, []);
 
-  async function triggerImport(supplier: string) {
-    const setLoading = supplier === 'spotgifts' ? setImportingSpot : setImportingXbz;
-    setLoading(true);
-    setStatusMsg(`Iniciando importacao de ${supplier}...`);
+  function startPolling() {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch('/api/import/spotgifts');
+        if (res.ok) {
+          const data: ImportProgress = await res.json();
+          setProgress(data.progress);
+          if (!data.running && data.progress.status !== 'idle') {
+            // Import finished
+            clearInterval(pollRef.current!);
+            pollRef.current = null;
+            setImportingSpot(false);
+            setStatusMsg(`Importacao concluida: ${data.progress.added} novos, ${data.progress.updated} atualizados, ${data.progress.errors} erros`);
+            loadRuns();
+          }
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+  }
+
+  async function triggerSpotImport() {
+    setImportingSpot(true);
+    setStatusMsg('Iniciando importacao SpotGifts... Isso pode levar alguns minutos.');
+    setProgress({ total: 0, processed: 0, added: 0, updated: 0, errors: 0, status: 'starting' });
     try {
-      const res = await fetch(`/api/import/${supplier}`, { method: 'POST' });
+      const res = await fetch('/api/import/spotgifts', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setStatusMsg(`Importacao ${supplier} concluida: ${data.new_added} novos, ${data.updated} atualizados`);
+        startPolling();
+      } else {
+        setStatusMsg(`Erro: ${data.error}`);
+        setImportingSpot(false);
+      }
+    } catch (err) {
+      setStatusMsg(`Erro na importacao: ${err}`);
+      setImportingSpot(false);
+    }
+  }
+
+  async function triggerXbzImport() {
+    setImportingXbz(true);
+    setStatusMsg('Iniciando importacao XBZ Brindes...');
+    try {
+      const res = await fetch('/api/import/xbzbrindes', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg(`XBZ importado: ${data.new_added} novos, ${data.updated} atualizados`);
       } else {
         setStatusMsg(`Erro: ${data.error}`);
       }
     } catch (err) {
       setStatusMsg(`Erro na importacao: ${err}`);
     }
-    setLoading(false);
+    setImportingXbz(false);
     loadRuns();
   }
 
@@ -77,16 +126,37 @@ export default function AdminImport() {
         <div className="mb-6 p-4 bg-lime-50 text-lime-800 rounded-lg text-sm">{statusMsg}</div>
       )}
 
+      {/* Progress bar */}
+      {importingSpot && progress && (
+        <div className="mb-6 bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Importando SpotGifts...</span>
+            <span>{progress.processed} produtos processados</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div
+              className="bg-green-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: progress.total > 0 ? `${Math.min(100, (progress.processed / Math.max(progress.total, 1)) * 100)}%` : '5%' }}
+            />
+          </div>
+          <div className="flex gap-4 mt-2 text-xs text-gray-500">
+            <span>Novos: {progress.added}</span>
+            <span>Atualizados: {progress.updated}</span>
+            <span>Erros: {progress.errors}</span>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* SpotGifts */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-2">SpotGifts</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Importar catalogo completo de spotgifts.com.br via scraping automatico.
-            Aproximadamente 1.155 produtos.
+            Importar catalogo completo de spotgifts.com.br.
+            Aproximadamente 1.155 produtos. A importacao roda em segundo plano.
           </p>
           <button
-            onClick={() => triggerImport('spotgifts')}
+            onClick={triggerSpotImport}
             disabled={importingSpot}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
           >
@@ -114,7 +184,7 @@ export default function AdminImport() {
             </button>
           </form>
           <button
-            onClick={() => triggerImport('xbzbrindes')}
+            onClick={triggerXbzImport}
             disabled={importingXbz}
             className="mt-3 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50 text-sm"
           >
