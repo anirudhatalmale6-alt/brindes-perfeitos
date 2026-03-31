@@ -3,6 +3,12 @@
 import Link from 'next/link';
 import AddToCartButton from './AddToCartButton';
 
+interface ColorInfo {
+  name: string;
+  code?: string;
+  hex?: string;
+}
+
 interface ProductCardProps {
   id: number;
   name: string;
@@ -12,11 +18,57 @@ interface ProductCardProps {
   supplier?: string;
   supplier_sku?: string | null;
   min_order?: number | null;
+  colors?: string | null;
+  units_per_box?: number | null;
   is_new: number;
   is_featured: number;
 }
 
-export default function ProductCard({ id, name, slug, image_main, category_name, supplier_sku, min_order, is_new, is_featured }: ProductCardProps) {
+// Map common color names to hex values
+const colorNameToHex: Record<string, string> = {
+  'preto': '#000000', 'black': '#000000', 'negro': '#000000',
+  'branco': '#FFFFFF', 'white': '#FFFFFF',
+  'vermelho': '#EF4444', 'red': '#EF4444', 'encarnado': '#EF4444',
+  'azul': '#3B82F6', 'blue': '#3B82F6', 'azul marinho': '#1E3A5F', 'navy': '#1E3A5F', 'navy blue': '#1E3A5F',
+  'verde': '#22C55E', 'green': '#22C55E', 'verde escuro': '#166534',
+  'amarelo': '#EAB308', 'yellow': '#EAB308',
+  'laranja': '#F97316', 'orange': '#F97316',
+  'rosa': '#EC4899', 'pink': '#EC4899',
+  'roxo': '#A855F7', 'purple': '#A855F7',
+  'cinza': '#6B7280', 'cinzento': '#6B7280', 'gray': '#6B7280', 'grey': '#6B7280',
+  'marrom': '#92400E', 'castanho': '#92400E', 'brown': '#92400E',
+  'prata': '#C0C0C0', 'silver': '#C0C0C0', 'prateado': '#C0C0C0',
+  'dourado': '#D4A843', 'gold': '#D4A843', 'ouro': '#D4A843',
+  'bege': '#D2B48C', 'beige': '#D2B48C',
+  'coral': '#FF7F50',
+  'turquesa': '#40E0D0', 'turquoise': '#40E0D0',
+  'borgonha': '#800020', 'bordeaux': '#800020', 'vinho': '#800020',
+  'caqui': '#C3B091', 'khaki': '#C3B091',
+  'natural': '#E8DCC8',
+};
+
+function getColorHex(color: ColorInfo): string | null {
+  if (color.hex) return color.hex;
+  if (color.code) {
+    const lower = color.code.toLowerCase();
+    if (colorNameToHex[lower]) return colorNameToHex[lower];
+  }
+  const lower = color.name.toLowerCase().trim();
+  // Try exact match first
+  if (colorNameToHex[lower]) return colorNameToHex[lower];
+  // Try partial match
+  for (const [key, hex] of Object.entries(colorNameToHex)) {
+    if (lower.includes(key) || key.includes(lower)) return hex;
+  }
+  return null;
+}
+
+export default function ProductCard({ id, name, slug, image_main, category_name, supplier_sku, min_order, colors, units_per_box, is_new, is_featured }: ProductCardProps) {
+  let parsedColors: ColorInfo[] = [];
+  try {
+    if (colors) parsedColors = JSON.parse(colors);
+  } catch { /* ignore */ }
+
   return (
     <div className="product-card bg-white rounded-lg shadow-sm overflow-hidden">
       <Link href={`/catalogo/${slug}`} className="block">
@@ -34,12 +86,46 @@ export default function ProductCard({ id, name, slug, image_main, category_name,
             {is_new ? <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded">Novo</span> : null}
             {is_featured ? <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded">Destaque</span> : null}
           </div>
+          {units_per_box && units_per_box > 0 && (
+            <div className="absolute top-2 right-2">
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded">
+                {units_per_box} un/cx
+              </span>
+            </div>
+          )}
         </div>
         <div className="p-3 pb-1">
           {category_name && (
             <span className="text-xs text-lime-600 font-medium uppercase">{category_name}</span>
           )}
           <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{name}</h3>
+          {/* Color dots */}
+          {parsedColors.length > 0 && (
+            <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+              {parsedColors.slice(0, 8).map((color, idx) => {
+                const hex = getColorHex(color);
+                return hex ? (
+                  <span
+                    key={idx}
+                    className="w-4 h-4 rounded-full border border-gray-300 inline-block"
+                    style={{ backgroundColor: hex }}
+                    title={color.name}
+                  />
+                ) : (
+                  <span
+                    key={idx}
+                    className="text-[10px] text-gray-500 bg-gray-100 px-1 rounded"
+                    title={color.name}
+                  >
+                    {color.name.slice(0, 8)}
+                  </span>
+                );
+              })}
+              {parsedColors.length > 8 && (
+                <span className="text-[10px] text-gray-400">+{parsedColors.length - 8}</span>
+              )}
+            </div>
+          )}
           {min_order && min_order > 1 && (
             <p className="text-xs text-amber-600 mt-1">Min: {min_order} un.</p>
           )}
