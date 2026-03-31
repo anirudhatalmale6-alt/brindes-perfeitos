@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', sizes: '192x192', type: 'image/png' },
     ],
   },
   description: "Catalogo completo de brindes promocionais personalizados para sua empresa. Melhor qualidade, melhor preco e melhor servico. Canetas, mochilas, chaveiros, squeezes e mais de 1.000 produtos personalizados dos melhores fornecedores do Brasil.",
