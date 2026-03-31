@@ -8,7 +8,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <Image src="/logo.png" alt="Brindes Perfeitos" width={180} height={54} className="h-12 w-auto mb-3" />
+            <div className="bg-white rounded-lg inline-block px-3 py-2 mb-3">
+              <Image src="/logo.png" alt="Brindes Perfeitos" width={180} height={54} className="h-10 w-auto" />
+            </div>
             <p className="text-sm text-gray-400">
               Seu parceiro em brindes promocionais personalizados. Qualidade e variedade para destacar sua marca.
             </p>
@@ -44,7 +46,7 @@ export default function Footer() {
               <li><a href="tel:+551127719911" className="hover:text-white">(11) 2771-9911</a></li>
               <li><a href="https://wa.me/551127719911" className="hover:text-white">WhatsApp: (11) 2771-9911</a></li>
               <li>
-                <Link href="/contato" className="bg-amber-500 text-white px-4 py-2 rounded-lg inline-block mt-2 hover:bg-amber-600 text-sm">
+                <Link href="/carrinho" className="bg-amber-500 text-white px-4 py-2 rounded-lg inline-block mt-2 hover:bg-amber-600 text-sm">
                   Meu Carrinho
                 </Link>
               </li>
