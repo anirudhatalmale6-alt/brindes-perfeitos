@@ -119,6 +119,32 @@ export default function AdminImport() {
     }
   }
 
+  async function clearProducts(supplier?: string) {
+    const msg = supplier
+      ? `Excluir todos os produtos do ${supplier}? Isso nao pode ser desfeito.`
+      : 'Excluir TODOS os produtos? Isso nao pode ser desfeito.';
+    if (!confirm(msg)) return;
+    if (!supplier && !confirm('Tem certeza? Todos os produtos serao excluidos permanentemente.')) return;
+
+    setStatusMsg('Excluindo produtos...');
+    try {
+      const res = await fetch('/api/import/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ supplier: supplier || '' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg(data.message);
+      } else {
+        setStatusMsg(`Erro: ${data.error}`);
+      }
+    } catch (err) {
+      setStatusMsg(`Erro: ${err}`);
+    }
+    loadRuns();
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Importar Produtos</h1>
@@ -168,6 +194,23 @@ export default function AdminImport() {
           </div>
         </div>
       )}
+
+      {/* Clear products */}
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <h3 className="text-sm font-semibold text-red-700 mb-2">Limpar Produtos</h3>
+        <p className="text-xs text-red-600 mb-3">Exclua produtos antes de reimportar para evitar duplicatas.</p>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => clearProducts('spotgifts')} className="bg-white text-red-600 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 text-xs">
+            Excluir SpotGifts
+          </button>
+          <button onClick={() => clearProducts('xbzbrindes')} className="bg-white text-red-600 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 text-xs">
+            Excluir XBZ Brindes
+          </button>
+          <button onClick={() => clearProducts()} className="bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 text-xs">
+            Excluir TODOS
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* SpotGifts */}

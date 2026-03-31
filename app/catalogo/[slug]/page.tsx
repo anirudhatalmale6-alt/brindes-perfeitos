@@ -22,20 +22,44 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!product) return { title: 'Produto nao encontrado' };
 
-  const skuText = product.supplier_sku ? ` - Ref: ${product.supplier_sku}` : '';
+  const skuText = product.supplier_sku ? ` - COD: ${product.supplier_sku}` : '';
   const categoryText = product.category_name ? ` | ${product.category_name}` : '';
-  const title = `${product.name} Personalizado${skuText}${categoryText}`;
+  const title = `${product.name} Personalizado${skuText}${categoryText} | Brindes Perfeitos`;
+
   const description = product.short_description
-    || `${product.name} personalizado e promocional para sua empresa. Adicione ao carrinho.${skuText}`;
+    ? `${product.short_description} Brinde personalizado com melhor qualidade e melhor preco.${skuText}`
+    : `${product.name} personalizado e promocional para sua empresa. Melhor qualidade e melhor preco. Solicite seu orcamento!${skuText}`;
+
+  // Auto-generated SEO keywords
+  const keywords = [
+    product.name,
+    `${product.name} personalizado`,
+    `${product.name} personalizada`,
+    `${product.name} promocional`,
+    `${product.name} corporativo`,
+    `${product.name} brinde`,
+    product.supplier_sku || '',
+    product.category_name ? `${product.category_name} personalizado` : '',
+    product.category_name ? `${product.category_name} promocional` : '',
+    'brinde personalizado',
+    'brinde promocional',
+    'brinde corporativo',
+    'brinde empresarial',
+    'melhor qualidade',
+    'melhor preco',
+    'brindes perfeitos',
+  ].filter(Boolean).join(', ');
 
   return {
     title,
     description,
-    keywords: `${product.name}, ${product.name} personalizado, ${product.name} promocional, brinde personalizado, brinde promocional${product.supplier_sku ? `, ${product.supplier_sku}` : ''}`,
+    keywords,
     openGraph: {
-      title: `${product.name} - Brinde Promocional Personalizado`,
+      title: `${product.name} - Brinde Personalizado | Melhor Qualidade e Preco`,
       description,
       images: product.image_main ? [product.image_main] : undefined,
+      siteName: 'Brindes Perfeitos',
+      type: 'website',
     },
   };
 }
