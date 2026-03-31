@@ -1,4 +1,5 @@
 import { BaseImporter, ProductData } from './base-importer';
+import https from 'https';
 
 interface XbzProduct {
   IdProduto: number;
@@ -84,17 +85,32 @@ export class XbzBrindesImporter extends BaseImporter {
   }
 
   async *fetchProducts(): AsyncGenerator<ProductData> {
-    // Fetch all products from XBZ API
+    // Fetch all products from XBZ API using https module to handle SSL
     const url = `${XBZ_API_URL}?cnpj=${XBZ_CNPJ}&token=${XBZ_TOKEN}`;
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
+
+    const allProducts: XbzProduct[] = await new Promise((resolve, reject) => {
+      const req = https.get(url, {
+        rejectUnauthorized: false, // XBZ API may use custom SSL cert
+        headers: { 'Accept': 'application/json' },
+        timeout: 60000,
+      }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            if (res.statusCode !== 200) {
+              reject(new Error(`XBZ API error: HTTP ${res.statusCode} - ${data.substring(0, 200)}`));
+              return;
+            }
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(new Error(`XBZ API parse error: ${e}`));
+          }
+        });
+      });
+      req.on('error', (e) => reject(new Error(`XBZ API connection error: ${e.message}`)));
+      req.on('timeout', () => { req.destroy(); reject(new Error('XBZ API timeout after 60s')); });
     });
-
-    if (!response.ok) {
-      throw new Error(`XBZ API error: HTTP ${response.status}`);
-    }
-
-    const allProducts: XbzProduct[] = await response.json();
 
     // Group products by CodigoAmigavel (same product, different colors)
     const grouped = new Map<string, XbzProduct[]>();
