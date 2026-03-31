@@ -16,6 +16,13 @@ interface Product {
   created_at: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  parent_id: number | null;
+}
+
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
@@ -23,6 +30,10 @@ export default function AdminProducts() {
   const [search, setSearch] = useState('');
   const [supplier, setSupplier] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [bulkCategory, setBulkCategory] = useState('');
+  const [bulkMsg, setBulkMsg] = useState('');
 
   async function loadProducts() {
     setLoading(true);
@@ -34,7 +45,13 @@ export default function AdminProducts() {
     setLoading(false);
   }
 
+  async function loadCategories() {
+    const res = await fetch('/api/categories');
+    if (res.ok) setCategories(await res.json());
+  }
+
   useEffect(() => { loadProducts(); }, [page, search, supplier]);
+  useEffect(() => { loadCategories(); }, []);
 
   async function toggleActive(id: number, current: number) {
     await fetch('/api/products', {
@@ -64,6 +81,58 @@ export default function AdminProducts() {
     loadProducts();
   }
 
+  function toggleSelect(id: number) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    if (selected.size === products.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(products.map(p => p.id)));
+    }
+  }
+
+  async function bulkAssignCategory() {
+    if (!bulkCategory || selected.size === 0) return;
+    setBulkMsg('Atualizando...');
+    const ids = Array.from(selected);
+    let ok = 0;
+    for (const id of ids) {
+      const res = await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, category_id: Number(bulkCategory) }),
+      });
+      if (res.ok) ok++;
+    }
+    setBulkMsg(`${ok} produtos movidos para a categoria!`);
+    setSelected(new Set());
+    setBulkCategory('');
+    loadProducts();
+    setTimeout(() => setBulkMsg(''), 3000);
+  }
+
+  async function bulkDelete() {
+    if (selected.size === 0) return;
+    if (!confirm(`Excluir ${selected.size} produtos selecionados?`)) return;
+    const ids = Array.from(selected);
+    for (const id of ids) {
+      await fetch('/api/products', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+    }
+    setSelected(new Set());
+    loadProducts();
+  }
+
   const totalPages = Math.ceil(total / 20);
 
   return (
@@ -74,6 +143,59 @@ export default function AdminProducts() {
           + Novo Produto
         </Link>
       </div>
+
+      {bulkMsg && (
+        <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{bulkMsg}</div>
+      )}
+
+      {/* Bulk actions */}
+      {selected.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex flex-wrap items-center gap-4">
+          <span className="text-sm font-medium text-blue-700">{selected.size} produtos selecionados</span>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={bulkCategory}
+              onChange={e => setBulkCategory(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white"
+            >
+              <option value="">Mover para categoria...</option>
+              {categories.filter(c => !c.parent_id).map(cat => (
+                <optgroup key={cat.id} label={cat.name}>
+                  <option value={cat.id}>{cat.name}</option>
+                  {categories.filter(sub => sub.parent_id === cat.id).map(sub => (
+                    <option key={sub.id} value={sub.id}>  {sub.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+              {categories.filter(c => c.parent_id).length === 0 && categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={bulkAssignCategory}
+              disabled={!bulkCategory}
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+            >
+              Mover
+            </button>
+          </div>
+
+          <button
+            onClick={bulkDelete}
+            className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-700"
+          >
+            Excluir selecionados
+          </button>
+
+          <button
+            onClick={() => setSelected(new Set())}
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Limpar selecao
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 border-b flex gap-4">
@@ -101,6 +223,14 @@ export default function AdminProducts() {
           <table className="w-full">
             <thead>
               <tr className="border-b text-left text-sm text-gray-500">
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={selected.size === products.length && products.length > 0}
+                    onChange={selectAll}
+                    className="rounded"
+                  />
+                </th>
                 <th className="px-4 py-3">Imagem</th>
                 <th className="px-4 py-3">Nome</th>
                 <th className="px-4 py-3">Fornecedor</th>
@@ -111,7 +241,15 @@ export default function AdminProducts() {
             </thead>
             <tbody>
               {products.map(p => (
-                <tr key={p.id} className="border-b hover:bg-gray-50">
+                <tr key={p.id} className={`border-b hover:bg-gray-50 ${selected.has(p.id) ? 'bg-blue-50' : ''}`}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(p.id)}
+                      onChange={() => toggleSelect(p.id)}
+                      className="rounded"
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     {p.image_main ? (
                       <img src={p.image_main} alt="" className="w-12 h-12 object-cover rounded" />

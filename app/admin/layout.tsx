@@ -10,6 +10,7 @@ const navItems = [
   { href: '/admin/banners', label: 'Banners', icon: '🖼️' },
   { href: '/admin/importar', label: 'Importar', icon: '⬇️' },
   { href: '/admin/orcamentos', label: 'Carrinho/Pedidos', icon: '🛒' },
+  { href: '/admin/seo', label: 'SEO', icon: '🔍' },
   { href: '/admin/configuracoes', label: 'Configuracoes', icon: '⚙️' },
 ];
 

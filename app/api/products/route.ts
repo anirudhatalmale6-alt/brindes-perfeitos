@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
   const supplier = url.searchParams.get('supplier') || '';
   const active = url.searchParams.get('active');
   const featured = url.searchParams.get('featured');
+  const color = url.searchParams.get('color') || '';
+  const sort = url.searchParams.get('sort') || '';
   const offset = (page - 1) * limit;
 
   let where = '1=1';
@@ -44,6 +46,10 @@ export async function GET(request: NextRequest) {
   if (featured === '1') {
     where += ' AND p.is_featured = 1';
   }
+  if (color) {
+    where += ' AND p.colors LIKE ?';
+    params.push(`%${color}%`);
+  }
 
   const countResult = db.prepare(`
     SELECT COUNT(DISTINCT p.id) as total FROM products p
@@ -57,7 +63,7 @@ export async function GET(request: NextRequest) {
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN product_categories pc ON p.id = pc.product_id
     WHERE ${where}
-    ORDER BY p.is_featured DESC, p.sort_order ASC, p.created_at DESC
+    ORDER BY ${sort === 'name_asc' ? 'p.name ASC' : sort === 'name_desc' ? 'p.name DESC' : sort === 'newest' ? 'p.created_at DESC' : sort === 'stock_desc' ? 'p.units_per_box DESC' : 'p.is_featured DESC, p.sort_order ASC, p.created_at DESC'}
     LIMIT ? OFFSET ?
   `).all(...params, limit, offset);
 

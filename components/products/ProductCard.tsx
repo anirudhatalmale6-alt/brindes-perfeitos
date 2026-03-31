@@ -87,9 +87,9 @@ export default function ProductCard({ id, name, slug, image_main, category_name,
             {is_featured ? <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded">Destaque</span> : null}
           </div>
           {units_per_box && units_per_box > 0 && (
-            <div className="absolute top-2 right-2">
+            <div className="absolute bottom-2 left-2">
               <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded">
-                {units_per_box} un/cx
+                Disponivel: {units_per_box.toLocaleString('pt-BR')}
               </span>
             </div>
           )}

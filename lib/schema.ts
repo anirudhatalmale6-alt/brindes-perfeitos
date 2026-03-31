@@ -112,6 +112,16 @@ export function initializeDatabase() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS seo_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      page_path TEXT NOT NULL UNIQUE,
+      page_title TEXT,
+      meta_description TEXT,
+      meta_keywords TEXT,
+      og_image TEXT,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_products_supplier ON products(supplier, supplier_sku);
     CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
     CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
@@ -143,6 +153,21 @@ export function initializeDatabase() {
     const stmt = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
     for (const [key, value] of defaults) {
       stmt.run(key, value);
+    }
+  }
+
+  // Seed default SEO settings
+  const seoCount = db.prepare('SELECT COUNT(*) as count FROM seo_settings').get() as { count: number };
+  if (seoCount.count === 0) {
+    const seoDefaults = [
+      ['/', 'Brindes Perfeitos - Brindes Promocionais Personalizados', 'Encontre os melhores brindes promocionais personalizados para sua empresa. Canetas, mochilas, squeezes, eletronicos e muito mais.', 'brindes personalizados, brindes promocionais, brindes corporativos, brindes empresariais, brindes para eventos'],
+      ['/categorias', 'Categorias de Brindes Personalizados | Brindes Perfeitos', 'Explore todas as categorias de brindes promocionais personalizados. Encontre o brinde ideal para sua empresa.', 'categorias brindes, tipos de brindes, brindes por categoria'],
+      ['/sobre', 'Sobre Nos | Brindes Perfeitos', 'Conheca a Brindes Perfeitos, sua parceira em brindes promocionais personalizados de alta qualidade.', 'sobre brindes perfeitos, empresa brindes, quem somos'],
+      ['/contato', 'Contato | Brindes Perfeitos', 'Entre em contato conosco para solicitar um orcamento de brindes personalizados.', 'contato brindes, orcamento brindes, fale conosco'],
+    ];
+    const seoStmt = db.prepare('INSERT OR IGNORE INTO seo_settings (page_path, page_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?)');
+    for (const [path, title, desc, keywords] of seoDefaults) {
+      seoStmt.run(path, title, desc, keywords);
     }
   }
 
