@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
 
@@ -34,7 +35,7 @@ export default function Header() {
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 mr-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-lime-700">Brindes<span className="text-amber-500">Perfeitos</span></h1>
+            <Image src="/logo.png" alt="Brindes Perfeitos" width={200} height={60} className="h-12 md:h-14 w-auto" priority />
           </Link>
 
           {/* Search bar */}

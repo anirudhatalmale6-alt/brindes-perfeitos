@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -7,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-bold text-white mb-3">Brindes<span className="text-amber-500">Perfeitos</span></h3>
+            <Image src="/logo.png" alt="Brindes Perfeitos" width={180} height={54} className="h-12 w-auto mb-3" />
             <p className="text-sm text-gray-400">
               Seu parceiro em brindes promocionais personalizados. Qualidade e variedade para destacar sua marca.
             </p>
