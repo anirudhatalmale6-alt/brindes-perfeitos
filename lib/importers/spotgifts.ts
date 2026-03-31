@@ -173,7 +173,7 @@ export class SpotGiftsImporter extends BaseImporter {
       }
 
       // Main image: prefer _set_2 (catalog image) or _set_1
-      let mainImage = images.find(i => i.includes('_set_2')) ||
+      const mainImage = images.find(i => i.includes('_set_2')) ||
                       images.find(i => i.includes('_set_1')) ||
                       images[0] || '';
 
