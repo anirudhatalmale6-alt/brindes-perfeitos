@@ -72,6 +72,7 @@ interface DbProduct {
   image_main: string | null; personalization_techniques: string | null;
   min_order: number | null; units_per_box: number | null;
   box_weight: number | null; box_dimensions: string | null;
+  price: number | null;
   is_active: number; is_featured: number; is_new: number;
   source_url: string | null;
 }
@@ -155,6 +156,23 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
                 <p className="text-xs text-lime-600 mt-1 font-medium">Brinde Promocional Personalizado</p>
 
+                {/* Price and Stock */}
+                <div className="mt-4 flex flex-wrap items-center gap-4">
+                  {product.price && product.price > 0 && (
+                    <p className="text-xl font-bold text-green-700">
+                      A partir de R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  )}
+                  {product.units_per_box && product.units_per_box > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Disponivel: {product.units_per_box.toLocaleString('pt-BR')} un.
+                    </span>
+                  )}
+                </div>
+
                 {product.short_description && (
                   <p className="text-gray-600 mt-4">{product.short_description}</p>
                 )}
@@ -206,12 +224,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
 
                 {/* Packaging */}
-                {(product.units_per_box || product.min_order) && (
+                {(product.min_order || product.box_weight || product.box_dimensions) && (
                   <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">Informacoes de Embalagem</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       {product.min_order && <div><span className="text-gray-500">Pedido minimo:</span> <span className="font-medium">{product.min_order} un.</span></div>}
-                      {product.units_per_box && <div><span className="text-gray-500">Un. por caixa:</span> <span className="font-medium">{product.units_per_box}</span></div>}
                       {product.box_weight && <div><span className="text-gray-500">Peso caixa:</span> <span className="font-medium">{product.box_weight} kg</span></div>}
                       {product.box_dimensions && <div><span className="text-gray-500">Dimensoes caixa:</span> <span className="font-medium">{product.box_dimensions}</span></div>}
                     </div>
