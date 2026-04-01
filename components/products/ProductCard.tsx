@@ -46,6 +46,15 @@ const colorNameToHex: Record<string, string> = {
   'borgonha': '#800020', 'bordeaux': '#800020', 'vinho': '#800020',
   'caqui': '#C3B091', 'khaki': '#C3B091',
   'natural': '#E8DCC8',
+  'transparente': '#E5E7EB', 'inox': '#D1D5DB', 'chumbo': '#4B5563',
+  'bronze': '#CD7F32', 'cobre': '#B87333', 'bambu': '#D4A76A',
+  'kraft': '#C4A882', 'madeira': '#8B6914', 'colorido': '#8B5CF6',
+  // SpotGifts numeric color codes
+  '103': '#000000', '104': '#3B82F6', '105': '#3B82F6', '106': '#FFFFFF',
+  '107': '#EF4444', '108': '#22C55E', '109': '#EAB308', '110': '#F97316',
+  '111': '#EC4899', '112': '#6B7280', '113': '#92400E', '114': '#C0C0C0',
+  '115': '#D4A843', '116': '#A855F7', '117': '#E8DCC8', '118': '#D2B48C',
+  '119': '#1E3A5F', '120': '#800020', '121': '#40E0D0',
 };
 
 function getColorHex(color: ColorInfo): string | null {
