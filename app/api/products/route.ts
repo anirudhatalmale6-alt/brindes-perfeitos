@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
   const params: unknown[] = [];
 
   if (search) {
-    where += ' AND (p.name LIKE ? OR p.supplier_sku LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`);
+    where += ' AND (p.name LIKE ? OR p.supplier_sku LIKE ? OR p.short_description LIKE ? OR c.name LIKE ?)';
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
   }
   if (category) {
     // Include products from subcategories when filtering by parent category

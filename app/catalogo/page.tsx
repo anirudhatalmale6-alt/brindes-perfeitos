@@ -32,12 +32,19 @@ function CatalogPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('q') || '');
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [selectedCategory, setSelectedCategory] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({
-      page: String(page), limit: '24', search, active: '1',
+      page: String(page), limit: '24', search: debouncedSearch, active: '1',
       category: selectedCategory,
     });
     if (searchParams.get('featured') === '1') params.set('featured', '1');
@@ -47,7 +54,7 @@ function CatalogPage() {
     setProducts(data.products);
     setTotal(data.total);
     setLoading(false);
-  }, [page, search, selectedCategory, searchParams]);
+  }, [page, debouncedSearch, selectedCategory, searchParams]);
 
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(setCategories);
@@ -78,7 +85,7 @@ function CatalogPage() {
                 {/* Search */}
                 <div className="mb-4">
                   <input type="text" placeholder="Buscar..." value={search}
-                    onChange={e => { setSearch(e.target.value); setPage(1); }}
+                    onChange={e => setSearch(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                 </div>
 
@@ -120,7 +127,7 @@ function CatalogPage() {
               {/* Mobile filters */}
               <div className="lg:hidden mb-4 flex gap-2">
                 <input type="text" placeholder="Buscar..." value={search}
-                  onChange={e => { setSearch(e.target.value); setPage(1); }}
+                  onChange={e => setSearch(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                 <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(1); }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
