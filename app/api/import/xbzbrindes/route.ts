@@ -57,10 +57,12 @@ async function runXbzImport() {
       added: stats.new_added,
       updated: stats.updated,
       errors: stats.errors,
-      status: 'completed',
+      status: stats.total_found > 0 ? 'completed' : 'error: Nenhum produto retornado pela API XBZ',
     };
   } catch (err) {
-    importProgress.status = `error: ${String(err)}`;
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[XBZ Import Error]', errMsg);
+    importProgress.status = `error: ${errMsg}`;
   } finally {
     importRunning = false;
   }

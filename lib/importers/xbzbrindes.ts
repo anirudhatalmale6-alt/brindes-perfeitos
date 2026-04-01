@@ -92,24 +92,30 @@ export class XbzBrindesImporter extends BaseImporter {
       const req = https.get(url, {
         rejectUnauthorized: false, // XBZ API may use custom SSL cert
         headers: { 'Accept': 'application/json' },
-        timeout: 60000,
+        timeout: 120000,
       }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
         res.on('end', () => {
           try {
+            const data = Buffer.concat(chunks).toString('utf-8');
             if (res.statusCode !== 200) {
               reject(new Error(`XBZ API error: HTTP ${res.statusCode} - ${data.substring(0, 200)}`));
               return;
             }
-            resolve(JSON.parse(data));
+            const parsed = JSON.parse(data);
+            if (!Array.isArray(parsed)) {
+              reject(new Error(`XBZ API returned non-array: ${typeof parsed}`));
+              return;
+            }
+            resolve(parsed);
           } catch (e) {
             reject(new Error(`XBZ API parse error: ${e}`));
           }
         });
       });
       req.on('error', (e) => reject(new Error(`XBZ API connection error: ${e.message}`)));
-      req.on('timeout', () => { req.destroy(); reject(new Error('XBZ API timeout after 60s')); });
+      req.on('timeout', () => { req.destroy(); reject(new Error('XBZ API timeout after 120s')); });
     });
 
     // Group products by CodigoAmigavel (same product, different colors)

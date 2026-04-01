@@ -176,6 +176,7 @@ export abstract class BaseImporter {
       this.finishRun();
     } catch (err) {
       this.failRun(String(err));
+      throw err; // Re-throw so caller can handle the error
     }
     return this.stats;
   }
