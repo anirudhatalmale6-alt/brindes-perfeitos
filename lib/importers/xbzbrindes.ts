@@ -103,7 +103,11 @@ export class XbzBrindesImporter extends BaseImporter {
               reject(new Error(`XBZ API error: HTTP ${res.statusCode} - ${data.substring(0, 200)}`));
               return;
             }
-            const parsed = JSON.parse(data);
+            let parsed = JSON.parse(data);
+            // API sometimes returns double-encoded JSON (string containing JSON)
+            if (typeof parsed === 'string') {
+              parsed = JSON.parse(parsed);
+            }
             if (!Array.isArray(parsed)) {
               reject(new Error(`XBZ API returned non-array: ${typeof parsed} - content: ${data.substring(0, 300)}`));
               return;
