@@ -105,7 +105,7 @@ export class XbzBrindesImporter extends BaseImporter {
             }
             const parsed = JSON.parse(data);
             if (!Array.isArray(parsed)) {
-              reject(new Error(`XBZ API returned non-array: ${typeof parsed}`));
+              reject(new Error(`XBZ API returned non-array: ${typeof parsed} - content: ${data.substring(0, 300)}`));
               return;
             }
             resolve(parsed);
