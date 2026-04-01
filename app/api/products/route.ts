@@ -67,8 +67,15 @@ export async function GET(request: NextRequest) {
     LIMIT ? OFFSET ?
   `).all(...params, limit, offset);
 
+  // Add lowest tier price to each product
+  const getTiers = db.prepare('SELECT min_qty, unit_price FROM pricing_tiers WHERE product_id = ? ORDER BY min_qty ASC');
+  const enrichedProducts = (products as Record<string, unknown>[]).map(p => {
+    const tiers = getTiers.all(p.id) as { min_qty: number; unit_price: number }[];
+    return { ...p, pricing_tiers: tiers.length > 0 ? tiers : null };
+  });
+
   return NextResponse.json({
-    products,
+    products: enrichedProducts,
     total: countResult.total,
     page,
     totalPages: Math.ceil(countResult.total / limit),

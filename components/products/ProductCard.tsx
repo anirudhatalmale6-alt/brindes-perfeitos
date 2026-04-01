@@ -9,6 +9,11 @@ interface ColorInfo {
   hex?: string;
 }
 
+interface PricingTier {
+  min_qty: number;
+  unit_price: number;
+}
+
 interface ProductCardProps {
   id: number;
   name: string;
@@ -21,6 +26,7 @@ interface ProductCardProps {
   colors?: string | null;
   units_per_box?: number | null;
   price?: number | null;
+  pricing_tiers?: PricingTier[] | null;
   is_new: number;
   is_featured: number;
 }
@@ -77,7 +83,7 @@ function getColorHex(color: ColorInfo): string | null {
   return null;
 }
 
-export default function ProductCard({ id, name, slug, image_main, category_name, supplier_sku, min_order, colors, units_per_box, price, is_new, is_featured }: ProductCardProps) {
+export default function ProductCard({ id, name, slug, image_main, category_name, supplier_sku, min_order, colors, units_per_box, price, pricing_tiers, is_new, is_featured }: ProductCardProps) {
   let parsedColors: ColorInfo[] = [];
   try {
     if (colors) parsedColors = JSON.parse(colors);
@@ -113,11 +119,15 @@ export default function ProductCard({ id, name, slug, image_main, category_name,
             <span className="text-xs text-lime-600 font-medium uppercase">{category_name}</span>
           )}
           <h3 className="text-sm font-medium text-gray-900 mt-1 line-clamp-2">{name}</h3>
-          {price && price > 0 && (
+          {pricing_tiers && pricing_tiers.length > 0 ? (
+            <p className="text-sm font-bold text-green-700 mt-1">
+              A partir de R$ {pricing_tiers[0].unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          ) : price && price > 0 ? (
             <p className="text-sm font-bold text-green-700 mt-1">
               A partir de R$ {price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
-          )}
+          ) : null}
           {/* Color dots */}
           {parsedColors.length > 0 && (
             <div className="flex items-center gap-1 mt-1.5 flex-wrap">

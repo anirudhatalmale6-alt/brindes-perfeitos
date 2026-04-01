@@ -100,6 +100,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const images = product.images ? JSON.parse(product.images as string) : [];
   const techniques = product.personalization_techniques ? JSON.parse(product.personalization_techniques as string) : [];
 
+  // Pricing tiers
+  const pricingTiers = db.prepare(
+    'SELECT min_qty, unit_price FROM pricing_tiers WHERE product_id = ? ORDER BY min_qty ASC'
+  ).all(product.id) as { min_qty: number; unit_price: number }[];
+
   // Related products
   const related = db.prepare(`
     SELECT p.*, c.name as category_name FROM products p
@@ -156,9 +161,34 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
                 <p className="text-xs text-lime-600 mt-1 font-medium">Brinde Promocional Personalizado</p>
 
-                {/* Price and Stock */}
+                {/* Pricing Tiers Table */}
+                {pricingTiers.length > 0 && (
+                  <div className="mt-4 bg-green-50 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Tabela de Precos</h3>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-500">
+                          <th className="pb-1">Quantidade</th>
+                          <th className="pb-1 text-right">Preco Unitario</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pricingTiers.map((tier, i) => (
+                          <tr key={i} className="border-t border-green-200">
+                            <td className="py-1.5 font-medium">A partir de {tier.min_qty} un.</td>
+                            <td className="py-1.5 text-right font-bold text-green-700">
+                              R$ {tier.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Price (if no tiers) and Stock */}
                 <div className="mt-4 flex flex-wrap items-center gap-4">
-                  {product.price && product.price > 0 && (
+                  {pricingTiers.length === 0 && product.price && product.price > 0 && (
                     <p className="text-xl font-bold text-green-700">
                       A partir de R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
