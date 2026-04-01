@@ -33,6 +33,7 @@ export default function CarrinhoPage() {
             supplier_sku: i.supplier_sku,
             category_name: i.category_name,
             quantity: i.quantity,
+            unit_price: i.unit_price,
           })),
         }),
       });
@@ -125,6 +126,13 @@ export default function CarrinhoPage() {
                             <p className="text-xs text-lime-600 mt-0.5">{item.category_name}</p>
                           )}
 
+                          {/* Price */}
+                          {item.unit_price && item.unit_price > 0 && (
+                            <p className="text-sm font-bold text-green-700 mt-1">
+                              R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} / un.
+                            </p>
+                          )}
+
                           {/* Min order notice */}
                           {item.min_order && item.min_order > 1 && (
                             <p className="text-xs text-amber-600 mt-1">Pedido minimo: {item.min_order} un.</p>
@@ -141,6 +149,11 @@ export default function CarrinhoPage() {
                               <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                 className="px-2 py-1 text-gray-500 hover:bg-gray-100 text-sm">+</button>
                             </div>
+                            {item.unit_price && item.unit_price > 0 && (
+                              <span className="text-sm font-semibold text-gray-700">
+                                = R$ {(item.unit_price * item.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
                             <button onClick={() => removeItem(item.id)}
                               className="text-xs text-red-500 hover:text-red-700">Remover</button>
                           </div>
@@ -149,6 +162,19 @@ export default function CarrinhoPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Totals */}
+                {items.some(i => i.unit_price && i.unit_price > 0) && (
+                  <div className="bg-white rounded-lg shadow-sm p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">Total estimado:</span>
+                      <span className="text-xl font-bold text-green-700">
+                        R$ {items.reduce((sum, i) => sum + (i.unit_price || 0) * i.quantity, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">* Valor estimado baseado na tabela de precos. O valor final sera confirmado no orcamento.</p>
+                  </div>
+                )}
 
                 <Link href="/catalogo" className="inline-block text-lime-600 hover:underline text-sm font-medium">
                   Continuar adicionando produtos

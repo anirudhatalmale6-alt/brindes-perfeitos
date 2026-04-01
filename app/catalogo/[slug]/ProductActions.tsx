@@ -12,6 +12,7 @@ interface ProductActionsProps {
     supplier_sku: string | null;
     category_name: string | null;
     min_order: number | null;
+    unit_price?: number | null;
   };
 }
 

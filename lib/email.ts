@@ -18,7 +18,7 @@ interface CartQuoteEmailData {
   email: string;
   whatsapp: string;
   message: string | null;
-  items: { id: number; name: string; supplier_sku: string | null; category_name: string | null; quantity: number }[];
+  items: { id: number; name: string; supplier_sku: string | null; category_name: string | null; quantity: number; unit_price?: number | null }[];
   pdfBuffer: Buffer;
 }
 
@@ -143,7 +143,7 @@ export async function sendCartQuoteEmail(data: CartQuoteEmailData): Promise<bool
   const smtpConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
 
   const itemsList = data.items.map((item, i) =>
-    `${i + 1}. ${item.name}${item.supplier_sku ? ` (${item.supplier_sku})` : ''} - Qtd: ${item.quantity}`
+    `${i + 1}. ${item.name}${item.supplier_sku ? ` (${item.supplier_sku})` : ''} - Qtd: ${item.quantity}${item.unit_price ? ` - R$ ${(item.unit_price * item.quantity).toFixed(2)}` : ''}`
   ).join('\n');
 
   if (!smtpConfigured) {
@@ -159,12 +159,16 @@ export async function sendCartQuoteEmail(data: CartQuoteEmailData): Promise<bool
   const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@brindesperfeitos.com.br';
   const subject = `Pedido de Orcamento ${data.quoteNumber} - ${data.company}`;
 
+  const hasAnyPrice = data.items.some(i => i.unit_price && i.unit_price > 0);
+  const grandTotal = data.items.reduce((sum, i) => sum + (i.unit_price || 0) * i.quantity, 0);
+
   const htmlItems = data.items.map((item, i) => `
     <tr style="border-bottom: 1px solid #e5e7eb;">
       <td style="padding: 8px;">${i + 1}</td>
       <td style="padding: 8px;">${item.name}</td>
       <td style="padding: 8px;">${item.supplier_sku || '-'}</td>
       <td style="padding: 8px; text-align: center;">${item.quantity}</td>
+      ${hasAnyPrice ? `<td style="padding: 8px; text-align: right;">R$ ${((item.unit_price || 0) * item.quantity).toFixed(2)}</td>` : ''}
     </tr>
   `).join('');
 
@@ -185,9 +189,17 @@ export async function sendCartQuoteEmail(data: CartQuoteEmailData): Promise<bool
               <th style="padding: 8px; text-align: left;">Produto</th>
               <th style="padding: 8px; text-align: left;">Codigo</th>
               <th style="padding: 8px; text-align: center;">Qtd</th>
+              ${hasAnyPrice ? '<th style="padding: 8px; text-align: right;">Total</th>' : ''}
             </tr>
           </thead>
           <tbody>${htmlItems}</tbody>
+          ${hasAnyPrice && grandTotal > 0 ? `
+          <tfoot>
+            <tr style="background: #f0fdf4; font-weight: bold;">
+              <td colspan="4" style="padding: 8px; text-align: right;">Total Estimado:</td>
+              <td style="padding: 8px; text-align: right;">R$ ${grandTotal.toFixed(2)}</td>
+            </tr>
+          </tfoot>` : ''}
         </table>
         <p style="margin-top: 16px; color: #6b7280; font-size: 12px;">O orcamento em PDF esta anexado a este email.</p>
       </div>

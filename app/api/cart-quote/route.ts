@@ -26,6 +26,7 @@ interface CartItem {
   supplier_sku: string | null;
   category_name: string | null;
   quantity: number;
+  unit_price: number | null;
 }
 
 export async function POST(request: NextRequest) {

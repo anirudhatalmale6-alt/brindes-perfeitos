@@ -6,6 +6,7 @@ interface QuoteItem {
   supplier_sku: string | null;
   category_name: string | null;
   quantity: number;
+  unit_price: number | null;
 }
 
 interface QuoteData {
@@ -75,6 +76,8 @@ export function generateQuotePDF(data: QuoteData): Buffer {
     doc.text(`Observacoes: ${data.message}`, 25, 108);
   }
 
+  const hasAnyPrice = data.items.some(i => i.unit_price && i.unit_price > 0);
+
   // Table header
   let y = 125;
   doc.setFillColor(90, 163, 0);
@@ -85,14 +88,19 @@ export function generateQuotePDF(data: QuoteData): Buffer {
   doc.setFontSize(9);
   doc.text('#', 25, y);
   doc.text('Produto', 35, y);
-  doc.text('Codigo', 125, y);
-  doc.text('Categoria', 150, y);
-  doc.text('Qtd', pageWidth - 25, y, { align: 'right' });
+  doc.text('Codigo', 105, y);
+  doc.text('Qtd', 135, y);
+  if (hasAnyPrice) {
+    doc.text('Preco Un.', 152, y);
+    doc.text('Total', pageWidth - 25, y, { align: 'right' });
+  }
 
   // Table rows
   y += 10;
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
+
+  let grandTotal = 0;
 
   data.items.forEach((item, index) => {
     // Check if we need a new page
@@ -111,15 +119,18 @@ export function generateQuotePDF(data: QuoteData): Buffer {
     doc.text(`${index + 1}`, 25, y);
 
     // Truncate long names
-    const name = item.name.length > 45 ? item.name.substring(0, 42) + '...' : item.name;
+    const name = item.name.length > 35 ? item.name.substring(0, 32) + '...' : item.name;
     doc.text(name, 35, y);
-    doc.text(item.supplier_sku || '-', 125, y);
+    doc.text(item.supplier_sku || '-', 105, y);
+    doc.text(`${item.quantity}`, 135, y);
 
-    const cat = item.category_name
-      ? (item.category_name.length > 15 ? item.category_name.substring(0, 12) + '...' : item.category_name)
-      : '-';
-    doc.text(cat, 150, y);
-    doc.text(`${item.quantity}`, pageWidth - 25, y, { align: 'right' });
+    if (hasAnyPrice) {
+      const unitPrice = item.unit_price || 0;
+      const lineTotal = unitPrice * item.quantity;
+      grandTotal += lineTotal;
+      doc.text(unitPrice > 0 ? `R$ ${unitPrice.toFixed(2)}` : '-', 152, y);
+      doc.text(lineTotal > 0 ? `R$ ${lineTotal.toFixed(2)}` : '-', pageWidth - 25, y, { align: 'right' });
+    }
 
     y += 8;
   });
@@ -134,14 +145,22 @@ export function generateQuotePDF(data: QuoteData): Buffer {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.text(`Total de produtos: ${data.items.length}`, 25, y);
-  doc.text(`Total de itens: ${data.items.reduce((sum, i) => sum + i.quantity, 0)}`, pageWidth - 25, y, { align: 'right' });
+  if (hasAnyPrice && grandTotal > 0) {
+    doc.text(`Total: R$ ${grandTotal.toFixed(2)}`, pageWidth - 25, y, { align: 'right' });
+  } else {
+    doc.text(`Total de itens: ${data.items.reduce((sum, i) => sum + i.quantity, 0)}`, pageWidth - 25, y, { align: 'right' });
+  }
 
   // Footer note
   y += 15;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text('Os precos serao informados pela nossa equipe apos analise dos produtos e quantidades solicitadas.', 20, y);
+  if (hasAnyPrice) {
+    doc.text('* Valores estimados. O valor final sera confirmado pela nossa equipe.', 20, y);
+  } else {
+    doc.text('Os precos serao informados pela nossa equipe apos analise dos produtos e quantidades solicitadas.', 20, y);
+  }
   doc.text('Este documento e um pedido de orcamento, nao um documento fiscal.', 20, y + 5);
   doc.text('Brindes Perfeitos - contato@brindesperfeitos.com.br - WhatsApp: (11) 2771-9911', 20, y + 12);
 

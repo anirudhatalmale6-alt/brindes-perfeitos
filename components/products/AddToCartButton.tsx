@@ -12,6 +12,7 @@ interface AddToCartButtonProps {
     supplier_sku: string | null;
     category_name: string | null;
     min_order?: number | null;
+    unit_price?: number | null;
   };
   quantity?: number;
   className?: string;
@@ -25,7 +26,7 @@ export default function AddToCartButton({ product, quantity = 1, className, size
   function handleAdd() {
     const min = product.min_order || 1;
     const qty = Math.max(min, quantity);
-    addItem({ ...product, min_order: product.min_order ?? null }, qty);
+    addItem({ ...product, min_order: product.min_order ?? null, unit_price: product.unit_price ?? null }, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }

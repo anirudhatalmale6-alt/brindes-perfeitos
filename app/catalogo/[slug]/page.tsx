@@ -186,13 +186,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* Price (if no tiers) and Stock */}
+                {/* Stock */}
                 <div className="mt-4 flex flex-wrap items-center gap-4">
-                  {pricingTiers.length === 0 && product.price && product.price > 0 && (
-                    <p className="text-xl font-bold text-green-700">
-                      A partir de R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                  )}
                   {product.units_per_box && product.units_per_box > 0 && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,6 +265,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   id: product.id, name: product.name, slug: product.slug,
                   image_main: product.image_main, supplier_sku: product.supplier_sku,
                   category_name: product.category_name, min_order: product.min_order,
+                  unit_price: pricingTiers.length > 0 ? pricingTiers[0].unit_price : null,
                 }} />
               </div>
             </div>
