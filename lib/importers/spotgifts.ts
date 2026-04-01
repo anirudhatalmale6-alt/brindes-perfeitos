@@ -178,8 +178,13 @@ export class SpotGiftsImporter extends BaseImporter {
                       images[0] || '';
 
       // Use external URLs directly (don't download)
+      // Limit to max 10 images: prioritize _set_ images (product views) over color variants
+      const setImages = images.filter(i => i.includes('_set_'));
+      const otherImages = images.filter(i => !i.includes('_set_'));
+      const limitedImages = [...setImages, ...otherImages].slice(0, 10);
+
       const imageMain = mainImage;
-      const additionalImages = images.filter(i => i !== mainImage);
+      const additionalImages = limitedImages.filter(i => i !== mainImage);
 
       // Extract colors
       const colors: { name: string; code?: string }[] = [];
