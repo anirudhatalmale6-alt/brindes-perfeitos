@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
@@ -31,38 +31,80 @@ function CatalogPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<HTMLDivElement>(null);
+  const LIMIT = 48;
 
   // Debounce search input
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 400);
+    const timer = setTimeout(() => { setDebouncedSearch(search); }, 400);
     return () => clearTimeout(timer);
   }, [search]);
 
-  const loadProducts = useCallback(async () => {
-    setLoading(true);
+  // Reset when filters change
+  useEffect(() => {
+    setProducts([]);
+    setPage(1);
+    setHasMore(true);
+  }, [debouncedSearch, selectedCategory]);
+
+  const loadProducts = useCallback(async (pageNum: number, append: boolean) => {
+    if (append) setLoadingMore(true); else setLoading(true);
+
     const params = new URLSearchParams({
-      page: String(page), limit: '24', search: debouncedSearch, active: '1',
+      page: String(pageNum), limit: String(LIMIT), search: debouncedSearch, active: '1',
       category: selectedCategory,
     });
     if (searchParams.get('featured') === '1') params.set('featured', '1');
 
     const res = await fetch(`/api/products?${params}`);
     const data = await res.json();
-    setProducts(data.products);
+
+    if (append) {
+      setProducts(prev => [...prev, ...data.products]);
+    } else {
+      setProducts(data.products);
+    }
     setTotal(data.total);
-    setLoading(false);
-  }, [page, debouncedSearch, selectedCategory, searchParams]);
+    setHasMore(pageNum < data.totalPages);
+    if (append) setLoadingMore(false); else setLoading(false);
+  }, [debouncedSearch, selectedCategory, searchParams]);
 
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(setCategories);
   }, []);
 
-  useEffect(() => { loadProducts(); }, [loadProducts]);
+  // Load first page when filters change
+  useEffect(() => {
+    loadProducts(1, false);
+  }, [loadProducts]);
 
-  const totalPages = Math.ceil(total / 24);
+  // Load more when page increases beyond 1
+  useEffect(() => {
+    if (page > 1) {
+      loadProducts(page, true);
+    }
+  }, [page, loadProducts]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          setPage(p => p + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const el = observerRef.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.unobserve(el); };
+  }, [hasMore, loading, loadingMore]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -92,7 +134,7 @@ function CatalogPage() {
                 {/* Categories */}
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Categoria</h4>
-                  <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(1); }}
+                  <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                     <option value="">Todas</option>
                     {categories.filter(c => !c.parent_id).map(main => {
@@ -110,7 +152,7 @@ function CatalogPage() {
                 </div>
 
                 {(search || selectedCategory) && (
-                  <button onClick={() => { setSearch(''); setSelectedCategory(''); setPage(1); }}
+                  <button onClick={() => { setSearch(''); setSelectedCategory(''); }}
                     className="text-sm text-red-600 hover:underline">Limpar filtros</button>
                 )}
               </div>
@@ -129,7 +171,7 @@ function CatalogPage() {
                 <input type="text" placeholder="Buscar..." value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(1); }}
+                <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                   <option value="">Categoria</option>
                   {categories.filter(c => !c.parent_id).map(main => {
@@ -154,31 +196,34 @@ function CatalogPage() {
                   <p className="text-gray-400 mt-2">Tente alterar os filtros de busca.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {products.map(p => (
-                    <ProductCard key={p.id} {...p} />
-                  ))}
-                </div>
-              )}
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {products.map(p => (
+                      <ProductCard key={p.id} {...p} />
+                    ))}
+                  </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50 hover:bg-gray-100">Anterior</button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const p = page <= 3 ? i + 1 : page + i - 2;
-                    if (p < 1 || p > totalPages) return null;
-                    return (
-                      <button key={p} onClick={() => setPage(p)}
-                        className={`px-4 py-2 border rounded-lg text-sm ${page === p ? 'bg-lime-600 text-white' : 'hover:bg-gray-100'}`}>
-                        {p}
-                      </button>
-                    );
-                  })}
-                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50 hover:bg-gray-100">Proxima</button>
-                </div>
+                  {/* Infinite scroll trigger */}
+                  {hasMore && (
+                    <div ref={observerRef} className="flex justify-center py-8">
+                      {loadingMore && (
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          <span className="text-sm">Carregando mais produtos...</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!hasMore && products.length > 0 && (
+                    <p className="text-center text-gray-400 text-sm py-6">
+                      Mostrando todos os {total} produtos
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>

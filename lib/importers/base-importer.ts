@@ -11,6 +11,7 @@ export interface ProductData {
   category_name?: string;
   specs?: Record<string, string>;
   colors?: { name: string; code?: string; hex?: string }[];
+  color_stock?: Record<string, number>;
   image_main?: string;
   images?: string[];
   min_order?: number;
@@ -92,7 +93,7 @@ export abstract class BaseImporter {
       if (existing) {
         db.prepare(`
           UPDATE products SET name = ?, short_description = ?, description = ?, category_id = ?,
-          specs = ?, colors = ?, image_main = ?, images = ?, min_order = ?, units_per_box = ?,
+          specs = ?, colors = ?, color_stock = ?, image_main = ?, images = ?, min_order = ?, units_per_box = ?,
           box_weight = ?, box_dimensions = ?, personalization_techniques = ?,
           source_url = ?, price = ?, last_synced_at = datetime('now'), updated_at = datetime('now')
           WHERE id = ?
@@ -100,6 +101,7 @@ export abstract class BaseImporter {
           data.name, data.short_description || null, data.description || null, categoryId,
           data.specs ? JSON.stringify(data.specs) : null,
           data.colors ? JSON.stringify(data.colors) : null,
+          data.color_stock ? JSON.stringify(data.color_stock) : null,
           data.image_main || null,
           data.images ? JSON.stringify(data.images) : null,
           data.min_order || null, data.units_per_box || null,
@@ -119,14 +121,15 @@ export abstract class BaseImporter {
 
         db.prepare(`
           INSERT INTO products (supplier, supplier_sku, name, slug, short_description, description, category_id,
-          specs, colors, image_main, images, min_order, units_per_box, box_weight, box_dimensions,
+          specs, colors, color_stock, image_main, images, min_order, units_per_box, box_weight, box_dimensions,
           personalization_techniques, source_url, price, is_active, is_new, last_synced_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'))
         `).run(
           this.supplier, data.supplier_sku, data.name, finalSlug,
           data.short_description || null, data.description || null, categoryId,
           data.specs ? JSON.stringify(data.specs) : null,
           data.colors ? JSON.stringify(data.colors) : null,
+          data.color_stock ? JSON.stringify(data.color_stock) : null,
           data.image_main || null,
           data.images ? JSON.stringify(data.images) : null,
           data.min_order || null, data.units_per_box || null,

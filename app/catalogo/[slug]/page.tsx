@@ -68,7 +68,7 @@ interface DbProduct {
   id: number; name: string; slug: string; supplier: string; supplier_sku: string | null;
   short_description: string | null; description: string | null;
   category_id: number | null; category_name: string | null; category_slug: string | null;
-  specs: string | null; colors: string | null; images: string | null;
+  specs: string | null; colors: string | null; color_stock: string | null; images: string | null;
   image_main: string | null; personalization_techniques: string | null;
   min_order: number | null; units_per_box: number | null;
   box_weight: number | null; box_dimensions: string | null;
@@ -97,6 +97,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const specs = product.specs ? JSON.parse(product.specs as string) : {};
   const colors = product.colors ? JSON.parse(product.colors as string) : [];
+  const colorStock: Record<string, number> = product.color_stock ? JSON.parse(product.color_stock as string) : {};
   const images = product.images ? JSON.parse(product.images as string) : [];
   const techniques = product.personalization_techniques ? JSON.parse(product.personalization_techniques as string) : [];
 
@@ -202,18 +203,51 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <p className="text-gray-600 mt-4">{product.short_description}</p>
                 )}
 
-                {/* Colors */}
+                {/* Colors with per-color stock */}
                 {colors.length > 0 && (
                   <div className="mt-6">
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">Cores Disponiveis</h3>
-                    <div className="flex gap-2 flex-wrap">
-                      {colors.map((c: { name: string; hex?: string }, i: number) => (
-                        <span key={i} className="px-3 py-1 bg-gray-100 rounded text-sm text-gray-700">
-                          {c.hex && <span className="inline-block w-3 h-3 rounded-full mr-1 border" style={{ backgroundColor: c.hex }} />}
-                          {c.name}
-                        </span>
-                      ))}
-                    </div>
+                    {Object.keys(colorStock).length > 0 ? (
+                      <div className="bg-gray-50 rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-gray-500 border-b">
+                              <th className="px-3 py-2">Cor</th>
+                              <th className="px-3 py-2 text-right">Estoque</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {colors.map((c: { name: string; hex?: string }, i: number) => {
+                              const stock = colorStock[c.name] || 0;
+                              return (
+                                <tr key={i} className="border-b border-gray-200 last:border-0">
+                                  <td className="px-3 py-2 flex items-center gap-2">
+                                    {c.hex && <span className="inline-block w-4 h-4 rounded-full border border-gray-300" style={{ backgroundColor: c.hex }} />}
+                                    <span>{c.name}</span>
+                                  </td>
+                                  <td className="px-3 py-2 text-right">
+                                    {stock > 0 ? (
+                                      <span className="text-green-700 font-medium">{stock.toLocaleString('pt-BR')} un.</span>
+                                    ) : (
+                                      <span className="text-red-500">Indisponivel</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 flex-wrap">
+                        {colors.map((c: { name: string; hex?: string }, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-gray-100 rounded text-sm text-gray-700">
+                            {c.hex && <span className="inline-block w-3 h-3 rounded-full mr-1 border" style={{ backgroundColor: c.hex }} />}
+                            {c.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

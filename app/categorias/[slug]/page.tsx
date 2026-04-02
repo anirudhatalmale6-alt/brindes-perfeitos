@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
@@ -42,40 +42,84 @@ export default function CategoryPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [category, setCategory] = useState<Category | null>(null);
   const [subcategories, setSubcategories] = useState<{ id: number; name: string; slug: string; product_count: number }[]>([]);
   const [selectedColor, setSelectedColor] = useState('');
   const [sort, setSort] = useState('');
+  const [catId, setCatId] = useState<number | null>(null);
+  const observerRef = useRef<HTMLDivElement>(null);
+  const LIMIT = 48;
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const catRes = await fetch('/api/categories');
-    const cats = await catRes.json();
-    const cat = cats.find((c: Category) => c.slug === slug);
+  // Load category info once
+  useEffect(() => {
+    fetch('/api/categories').then(r => r.json()).then(cats => {
+      const cat = cats.find((c: Category) => c.slug === slug);
+      if (cat) {
+        setCategory(cat);
+        setCatId(cat.id);
+        const subs = cats.filter((c: Category & { product_count: number }) => c.parent_id === cat.id);
+        setSubcategories(subs);
+      }
+    });
+  }, [slug]);
 
-    if (cat) {
-      setCategory(cat);
-      const subs = cats.filter((c: Category & { product_count: number }) => c.parent_id === cat.id);
-      setSubcategories(subs);
+  // Reset when filters change
+  useEffect(() => {
+    setProducts([]);
+    setPage(1);
+    setHasMore(true);
+  }, [catId, selectedColor, sort]);
 
-      const p = new URLSearchParams({ page: String(page), limit: '24', category: String(cat.id), active: '1' });
-      if (selectedColor) p.set('color', selectedColor);
-      if (sort) p.set('sort', sort);
-      const res = await fetch(`/api/products?${p}`);
-      const data = await res.json();
+  const loadProducts = useCallback(async (pageNum: number, append: boolean) => {
+    if (!catId) return;
+    if (append) setLoadingMore(true); else setLoading(true);
+
+    const p = new URLSearchParams({ page: String(pageNum), limit: String(LIMIT), category: String(catId), active: '1' });
+    if (selectedColor) p.set('color', selectedColor);
+    if (sort) p.set('sort', sort);
+
+    const res = await fetch(`/api/products?${p}`);
+    const data = await res.json();
+
+    if (append) {
+      setProducts(prev => [...prev, ...data.products]);
+    } else {
       setProducts(data.products);
-      setTotal(data.total);
     }
-    setLoading(false);
-  }, [slug, page, selectedColor, sort]);
+    setTotal(data.total);
+    setHasMore(pageNum < data.totalPages);
+    if (append) setLoadingMore(false); else setLoading(false);
+  }, [catId, selectedColor, sort]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  // Load first page
+  useEffect(() => {
+    if (catId) loadProducts(1, false);
+  }, [loadProducts, catId]);
 
-  const totalPages = Math.ceil(total / 24);
+  // Load more pages
+  useEffect(() => {
+    if (page > 1 && catId) loadProducts(page, true);
+  }, [page, loadProducts, catId]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          setPage(p => p + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    const el = observerRef.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.unobserve(el); };
+  }, [hasMore, loading, loadingMore]);
 
   function handleColorFilter(color: string) {
     setSelectedColor(prev => prev === color ? '' : color);
-    setPage(1);
   }
 
   return (
@@ -121,10 +165,9 @@ export default function CategoryPage() {
           {/* Filters bar */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div className="flex flex-wrap items-center gap-4 mb-4">
-              {/* Sort */}
               <select
                 value={sort}
-                onChange={e => { setSort(e.target.value); setPage(1); }}
+                onChange={e => setSort(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
               >
                 <option value="">Ordenar por</option>
@@ -134,10 +177,9 @@ export default function CategoryPage() {
                 <option value="stock_desc">Maior estoque</option>
               </select>
 
-              {/* Active filter badge */}
               {selectedColor && (
                 <button
-                  onClick={() => { setSelectedColor(''); setPage(1); }}
+                  onClick={() => setSelectedColor('')}
                   className="flex items-center gap-1 px-3 py-1.5 bg-lime-50 text-lime-700 rounded-full text-sm"
                 >
                   <span className="w-3 h-3 rounded-full border border-gray-300 inline-block"
@@ -150,7 +192,6 @@ export default function CategoryPage() {
               )}
             </div>
 
-            {/* Color filter - always visible */}
             <div className="pt-3 border-t">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Filtrar por cor</h3>
               <div className="flex flex-wrap gap-2">
@@ -181,24 +222,36 @@ export default function CategoryPage() {
             <div className="text-center py-16">
               <p className="text-gray-500">Nenhum produto encontrado com esses filtros.</p>
               {selectedColor && (
-                <button onClick={() => { setSelectedColor(''); setPage(1); }}
+                <button onClick={() => setSelectedColor('')}
                   className="text-lime-600 hover:underline mt-2 inline-block">Limpar filtros</button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map(p => <ProductCard key={p.id} {...p} />)}
-            </div>
-          )}
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {products.map(p => <ProductCard key={p.id} {...p} />)}
+              </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50">Anterior</button>
-              <span className="px-4 py-2 text-sm text-gray-600">Pagina {page} de {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50">Proxima</button>
-            </div>
+              {hasMore && (
+                <div ref={observerRef} className="flex justify-center py-8">
+                  {loadingMore && (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span className="text-sm">Carregando mais produtos...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!hasMore && products.length > 0 && (
+                <p className="text-center text-gray-400 text-sm py-6">
+                  Mostrando todos os {total} produtos
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

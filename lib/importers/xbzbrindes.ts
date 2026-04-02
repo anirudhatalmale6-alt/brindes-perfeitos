@@ -135,17 +135,23 @@ export class XbzBrindesImporter extends BaseImporter {
     for (const [code, variants] of entries) {
       const primary = variants[0];
 
-      // Collect all colors from variants
+      // Collect all colors from variants with per-color stock
       const colorSet = new Map<string, { name: string; hex?: string }>();
+      const colorStock: Record<string, number> = {};
       let totalStock = 0;
       const images: string[] = [];
 
       for (const v of variants) {
-        if (v.CorWebPrincipal && !colorSet.has(v.CorWebPrincipal)) {
-          colorSet.set(v.CorWebPrincipal, {
-            name: v.CorWebPrincipal,
-            hex: COLOR_HEX_MAP[v.CorWebPrincipal.trim()] || undefined,
-          });
+        if (v.CorWebPrincipal) {
+          const colorName = v.CorWebPrincipal.trim();
+          if (!colorSet.has(colorName)) {
+            colorSet.set(colorName, {
+              name: colorName,
+              hex: COLOR_HEX_MAP[colorName] || undefined,
+            });
+          }
+          // Accumulate stock per color
+          colorStock[colorName] = (colorStock[colorName] || 0) + Math.max(0, v.QuantidadeDisponivel);
         }
         if (v.QuantidadeDisponivel > 0) {
           totalStock += v.QuantidadeDisponivel;
@@ -177,6 +183,7 @@ export class XbzBrindesImporter extends BaseImporter {
         category_name: categoryName,
         specs: Object.keys(specs).length > 0 ? specs : undefined,
         colors: colors.length > 0 ? colors : undefined,
+        color_stock: Object.keys(colorStock).length > 0 ? colorStock : undefined,
         image_main: primary.ImageLink || undefined,
         images: images.length > 1 ? images : undefined,
         units_per_box: totalStock > 0 ? totalStock : undefined,

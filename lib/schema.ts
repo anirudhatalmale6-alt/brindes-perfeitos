@@ -147,6 +147,13 @@ export function initializeDatabase() {
     db.exec('ALTER TABLE products ADD COLUMN price REAL');
   }
 
+  // Migrations: add color_stock column if missing
+  try {
+    db.prepare('SELECT color_stock FROM products LIMIT 1').get();
+  } catch {
+    db.exec('ALTER TABLE products ADD COLUMN color_stock TEXT');
+  }
+
   // Seed admin user if none exists
   const adminCount = db.prepare('SELECT COUNT(*) as count FROM admin_users').get() as { count: number };
   if (adminCount.count === 0) {
