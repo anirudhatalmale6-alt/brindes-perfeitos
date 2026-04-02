@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductActions from './ProductActions';
 import ImageGallery from '@/components/products/ImageGallery';
+import InlineEditor from '@/components/products/InlineEditor';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 import { notFound } from 'next/navigation';
@@ -202,6 +203,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.short_description && (
                   <p className="text-gray-600 mt-4">{product.short_description}</p>
                 )}
+                <InlineEditor productId={product.id} field="short_description" value={product.short_description || ''} label="Descricao Curta" />
 
                 {/* Colors with per-color stock */}
                 {colors.length > 0 && (
@@ -305,13 +307,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* Description */}
-            {product.description && (
-              <div className="mt-8 pt-8 border-t">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Descricao</h2>
-                <div className="prose max-w-none text-gray-600"
-                  dangerouslySetInnerHTML={{ __html: product.description! }} />
-              </div>
-            )}
+            <div className="mt-8 pt-8 border-t">
+              {product.description && (
+                <>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">Descricao</h2>
+                  <div className="prose max-w-none text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: product.description! }} />
+                </>
+              )}
+              <InlineEditor productId={product.id} field="description" value={product.description || ''} label="Descricao" multiline />
+            </div>
           </div>
 
           {/* Related Products */}
