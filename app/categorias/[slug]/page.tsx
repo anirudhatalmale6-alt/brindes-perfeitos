@@ -54,30 +54,6 @@ export default function CategoryPage() {
   const LIMIT = 48;
   const cacheKey = `cat_${slug}`;
 
-  // Restore scroll position when returning from product page
-  useEffect(() => {
-    try {
-      const cached = sessionStorage.getItem(`${cacheKey}_products`);
-      const cachedScroll = sessionStorage.getItem(`${cacheKey}_scroll`);
-      const cachedPage = sessionStorage.getItem(`${cacheKey}_page`);
-      const cachedTotal = sessionStorage.getItem(`${cacheKey}_total`);
-      if (cached && cachedScroll) {
-        setProducts(JSON.parse(cached));
-        setPage(parseInt(cachedPage || '1'));
-        setTotal(parseInt(cachedTotal || '0'));
-        setLoading(false);
-        setRestoredFromCache(true);
-        requestAnimationFrame(() => {
-          window.scrollTo(0, parseInt(cachedScroll));
-        });
-        sessionStorage.removeItem(`${cacheKey}_products`);
-        sessionStorage.removeItem(`${cacheKey}_scroll`);
-        sessionStorage.removeItem(`${cacheKey}_page`);
-        sessionStorage.removeItem(`${cacheKey}_total`);
-      }
-    } catch { /* ignore */ }
-  }, [cacheKey]);
-
   // Save scroll position when clicking a product link
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -92,6 +68,39 @@ export default function CategoryPage() {
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, [products, page, total, cacheKey]);
+
+  // Restore scroll position when returning from product page (on popstate / back button)
+  useEffect(() => {
+    function tryRestore() {
+      try {
+        const cached = sessionStorage.getItem(`${cacheKey}_products`);
+        const cachedScroll = sessionStorage.getItem(`${cacheKey}_scroll`);
+        const cachedPage = sessionStorage.getItem(`${cacheKey}_page`);
+        const cachedTotal = sessionStorage.getItem(`${cacheKey}_total`);
+        if (cached && cachedScroll) {
+          const parsed = JSON.parse(cached);
+          setProducts(parsed);
+          setPage(parseInt(cachedPage || '1'));
+          setTotal(parseInt(cachedTotal || '0'));
+          setHasMore(true);
+          setLoading(false);
+          setRestoredFromCache(true);
+          requestAnimationFrame(() => {
+            setTimeout(() => window.scrollTo(0, parseInt(cachedScroll)), 100);
+          });
+          sessionStorage.removeItem(`${cacheKey}_products`);
+          sessionStorage.removeItem(`${cacheKey}_scroll`);
+          sessionStorage.removeItem(`${cacheKey}_page`);
+          sessionStorage.removeItem(`${cacheKey}_total`);
+        }
+      } catch { /* ignore */ }
+    }
+    // Try restore on mount
+    tryRestore();
+    // Also listen for popstate (browser back/forward)
+    window.addEventListener('popstate', tryRestore);
+    return () => window.removeEventListener('popstate', tryRestore);
+  }, [cacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load category info once
   useEffect(() => {
@@ -108,11 +117,10 @@ export default function CategoryPage() {
 
   // Reset when filters change
   useEffect(() => {
-    if (restoredFromCache) return;
     setProducts([]);
     setPage(1);
     setHasMore(true);
-  }, [catId, selectedColor, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [catId, selectedColor, sort]);
 
   const loadProducts = useCallback(async (pageNum: number, append: boolean) => {
     if (!catId) return;
@@ -137,17 +145,14 @@ export default function CategoryPage() {
 
   // Load first page (skip if restored from cache)
   useEffect(() => {
-    if (restoredFromCache) {
-      setRestoredFromCache(false);
-      return;
-    }
+    if (restoredFromCache) return;
     if (catId) loadProducts(1, false);
-  }, [loadProducts, catId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadProducts, catId, restoredFromCache]);
 
   // Load more pages
   useEffect(() => {
     if (page > 1 && catId && !restoredFromCache) loadProducts(page, true);
-  }, [page, loadProducts, catId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, loadProducts, catId, restoredFromCache]);
 
   // Intersection observer for infinite scroll
   useEffect(() => {
