@@ -52,13 +52,18 @@ export async function POST(request: NextRequest) {
 
   const items: CartItem[] = body.items;
 
-  // Ensure whatsapp column exists
+  // Ensure columns exist
   try { db.exec("ALTER TABLE quote_requests ADD COLUMN whatsapp TEXT"); } catch {}
+  try { db.exec("ALTER TABLE quote_requests ADD COLUMN order_id TEXT"); } catch {}
+  try { db.exec("ALTER TABLE quote_requests ADD COLUMN unit_price REAL"); } catch {}
 
-  // Save each item as a quote request
+  // Generate order ID for this cart submission
+  const quoteNumber = `BP-${Date.now().toString(36).toUpperCase()}`;
+
+  // Save each item as a quote request with same order_id
   const insertStmt = db.prepare(`
-    INSERT INTO quote_requests (product_id, product_name, name, email, phone, company, whatsapp, quantity, message)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO quote_requests (product_id, product_name, name, email, phone, company, whatsapp, quantity, unit_price, message, order_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const productNames: string[] = [];
@@ -67,12 +72,9 @@ export async function POST(request: NextRequest) {
     insertStmt.run(
       item.id, item.name,
       body.name, body.email, body.whatsapp, body.company, body.whatsapp,
-      item.quantity, body.message || null
+      item.quantity, item.unit_price || null, body.message || null, quoteNumber
     );
   }
-
-  // Generate PDF
-  const quoteNumber = `BP-${Date.now().toString(36).toUpperCase()}`;
   const pdfBuffer = generateQuotePDF({
     quoteNumber,
     customerName: body.name,

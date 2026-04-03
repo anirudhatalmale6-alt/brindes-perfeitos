@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 
 interface Product {
@@ -28,6 +28,7 @@ export default function AdminProducts() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [supplier, setSupplier] = useState('');
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -35,22 +36,28 @@ export default function AdminProducts() {
   const [bulkCategory, setBulkCategory] = useState('');
   const [bulkMsg, setBulkMsg] = useState('');
 
-  async function loadProducts() {
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const loadProducts = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: '20', search, supplier });
+    const params = new URLSearchParams({ page: String(page), limit: '20', search: debouncedSearch, supplier });
     const res = await fetch(`/api/products?${params}`);
     const data = await res.json();
     setProducts(data.products);
     setTotal(data.total);
     setLoading(false);
-  }
+  }, [page, debouncedSearch, supplier]);
 
   async function loadCategories() {
     const res = await fetch('/api/categories');
     if (res.ok) setCategories(await res.json());
   }
 
-  useEffect(() => { loadProducts(); }, [page, search, supplier]);
+  useEffect(() => { loadProducts(); }, [loadProducts]);
   useEffect(() => { loadCategories(); }, []);
 
   async function toggleActive(id: number, current: number) {
@@ -201,7 +208,7 @@ export default function AdminProducts() {
         <div className="p-4 border-b flex gap-4">
           <input
             type="text" placeholder="Buscar produtos..." value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            onChange={e => setSearch(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <select

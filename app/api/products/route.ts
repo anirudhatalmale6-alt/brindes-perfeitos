@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
 
   const countResult = db.prepare(`
     SELECT COUNT(DISTINCT p.id) as total FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN product_categories pc ON p.id = pc.product_id
     WHERE ${where}
   `).get(...params) as { total: number };

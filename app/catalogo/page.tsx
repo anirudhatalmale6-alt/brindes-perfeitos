@@ -36,8 +36,49 @@ function CatalogPage() {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [hasMore, setHasMore] = useState(true);
+  const [restoredFromCache, setRestoredFromCache] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
   const LIMIT = 48;
+
+  // Restore scroll position and cached products when returning from product page
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem('catalog_products');
+      const cachedScroll = sessionStorage.getItem('catalog_scroll');
+      const cachedPage = sessionStorage.getItem('catalog_page');
+      const cachedTotal = sessionStorage.getItem('catalog_total');
+      if (cached && cachedScroll && !searchParams.get('q')) {
+        setProducts(JSON.parse(cached));
+        setPage(parseInt(cachedPage || '1'));
+        setTotal(parseInt(cachedTotal || '0'));
+        setLoading(false);
+        setRestoredFromCache(true);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(cachedScroll));
+        });
+        // Clear after restoring
+        sessionStorage.removeItem('catalog_products');
+        sessionStorage.removeItem('catalog_scroll');
+        sessionStorage.removeItem('catalog_page');
+        sessionStorage.removeItem('catalog_total');
+      }
+    } catch { /* ignore */ }
+  }, [searchParams]);
+
+  // Save scroll position when clicking a product link
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const link = (e.target as HTMLElement).closest('a[href*="/catalogo/"]');
+      if (link && products.length > 0) {
+        sessionStorage.setItem('catalog_products', JSON.stringify(products));
+        sessionStorage.setItem('catalog_scroll', String(window.scrollY));
+        sessionStorage.setItem('catalog_page', String(page));
+        sessionStorage.setItem('catalog_total', String(total));
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [products, page, total]);
 
   // Debounce search input
   useEffect(() => {
@@ -78,17 +119,21 @@ function CatalogPage() {
     fetch('/api/categories').then(r => r.json()).then(setCategories);
   }, []);
 
-  // Load first page when filters change
+  // Load first page when filters change (skip if restored from cache)
   useEffect(() => {
+    if (restoredFromCache) {
+      setRestoredFromCache(false);
+      return;
+    }
     loadProducts(1, false);
-  }, [loadProducts]);
+  }, [loadProducts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load more when page increases beyond 1
   useEffect(() => {
-    if (page > 1) {
+    if (page > 1 && !restoredFromCache) {
       loadProducts(page, true);
     }
-  }, [page, loadProducts]);
+  }, [page, loadProducts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Intersection observer for infinite scroll
   useEffect(() => {

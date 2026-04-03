@@ -4,6 +4,7 @@ import Footer from '@/components/layout/Footer';
 import ProductActions from './ProductActions';
 import ImageGallery from '@/components/products/ImageGallery';
 import InlineEditor from '@/components/products/InlineEditor';
+import AdminBar from '@/components/products/AdminBar';
 import { initializeDatabase } from '@/lib/schema';
 import { getDb } from '@/lib/db';
 import { notFound } from 'next/navigation';
@@ -137,6 +138,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <span className="text-gray-900">{product.name}</span>
           </nav>
 
+          <AdminBar productId={product.id} productName={product.name} />
           <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-8">
               {/* Images */}

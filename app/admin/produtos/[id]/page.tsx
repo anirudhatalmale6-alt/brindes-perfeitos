@@ -162,6 +162,9 @@ export default function EditProduct() {
                 </optgroup>
               ))}
             </select>
+            <a href="/admin/categorias" target="_blank" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+              + Gerenciar categorias e subcategorias
+            </a>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Fornecedor</label>
