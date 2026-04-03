@@ -94,7 +94,7 @@ export default function ProductCard({ id, name, slug, image_main, category_name,
       <Link href={`/catalogo/${slug}`} className="block">
         <div className="relative aspect-square bg-gray-100">
           {image_main ? (
-            <img src={image_main} alt={name} className="w-full h-full object-cover" />
+            <img src={image_main} alt={`${name} - Brinde Promocional Personalizado`} className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400">
               <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">

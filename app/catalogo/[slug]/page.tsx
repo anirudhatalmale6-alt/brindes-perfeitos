@@ -56,12 +56,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     keywords,
+    alternates: {
+      canonical: `https://brindesperfeitos.com.br/catalogo/${slug}`,
+    },
     openGraph: {
       title: `${product.name} - Brinde Personalizado | Melhor Qualidade e Preco`,
       description,
-      images: product.image_main ? [product.image_main] : undefined,
+      images: product.image_main ? [{ url: product.image_main, alt: product.name }] : undefined,
       siteName: 'Brindes Perfeitos',
-      type: 'website',
+      type: 'article',
+      url: `https://brindesperfeitos.com.br/catalogo/${slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} - Brinde Personalizado`,
+      description,
+      images: product.image_main ? [product.image_main] : undefined,
     },
   };
 }
@@ -116,13 +126,86 @@ export default async function ProductDetailPage({ params }: PageProps) {
     ORDER BY RANDOM() LIMIT 4
   `).all(product.category_id, product.id) as DbProduct[];
 
+  // JSON-LD Structured Data
+  const baseUrl = 'https://brindesperfeitos.com.br';
+  const productUrl = `${baseUrl}/catalogo/${product.slug}`;
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.short_description || `${product.name} - Brinde promocional personalizado`,
+    image: product.image_main ? [product.image_main, ...images.slice(0, 4)] : undefined,
+    sku: product.supplier_sku || undefined,
+    brand: {
+      '@type': 'Brand',
+      name: product.supplier || 'Brindes Perfeitos',
+    },
+    url: productUrl,
+    category: product.category_name || 'Brindes Promocionais',
+    ...(pricingTiers.length > 0 ? {
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'BRL',
+        lowPrice: Math.min(...pricingTiers.map(t => t.unit_price)).toFixed(2),
+        highPrice: Math.max(...pricingTiers.map(t => t.unit_price)).toFixed(2),
+        offerCount: pricingTiers.length,
+        availability: product.units_per_box && product.units_per_box > 0
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/PreOrder',
+        seller: {
+          '@type': 'Organization',
+          name: 'Brindes Perfeitos',
+        },
+      },
+    } : {
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'BRL',
+        price: '0',
+        availability: 'https://schema.org/PreOrder',
+        seller: {
+          '@type': 'Organization',
+          name: 'Brindes Perfeitos',
+        },
+      },
+    }),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Categorias', item: `${baseUrl}/categorias` },
+      ...(product.category_name ? [{
+        '@type': 'ListItem', position: 3, name: product.category_name,
+        item: `${baseUrl}/categorias/${product.category_slug}`,
+      }] : []),
+      {
+        '@type': 'ListItem',
+        position: product.category_name ? 4 : 3,
+        name: product.name,
+        item: productUrl,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="flex-1 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Breadcrumb */}
-          <nav className="text-sm text-gray-500 mb-6">
+          <nav className="text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-lime-600">Inicio</Link>
             <span className="mx-2">/</span>
             <Link href="/categorias" className="hover:text-lime-600">Categorias</Link>
@@ -331,7 +414,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     className="product-card bg-white rounded-lg shadow-sm overflow-hidden">
                     <div className="aspect-square bg-gray-100">
                       {p.image_main ? (
-                        <img src={p.image_main} alt={p.name} className="w-full h-full object-cover" />
+                        <img src={p.image_main} alt={`${p.name} - Brinde Personalizado`} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-300">
                           <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">

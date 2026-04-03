@@ -33,7 +33,7 @@ export default function ImageGallery({ mainImage, images, productName }: ImageGa
         {selectedImage ? (
           <img
             src={selectedImage}
-            alt={productName}
+            alt={`${productName} - Brinde Personalizado`}
             className="w-full h-full object-contain"
           />
         ) : (
@@ -85,7 +85,7 @@ export default function ImageGallery({ mainImage, images, productName }: ImageGa
                 i === selectedIndex ? 'border-lime-500' : 'border-transparent hover:border-gray-300'
               }`}
             >
-              <img src={img} alt="" className="w-full h-full object-cover" />
+              <img src={img} alt={`${productName} - Imagem ${i + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
