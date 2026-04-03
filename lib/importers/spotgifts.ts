@@ -234,6 +234,9 @@ export class SpotGiftsImporter extends BaseImporter {
         const firstOpt = optionals[0];
         const price = firstOpt?.YourPrice || undefined;
 
+        // Total stock = sum of all color stocks
+        const totalStock = Object.values(colorStock).reduce((a, b) => a + b, 0);
+
         // Category
         const categoryName = this.mapCategory(prod.Type);
 
@@ -249,7 +252,7 @@ export class SpotGiftsImporter extends BaseImporter {
           image_main: mainImage || undefined,
           images: additionalImages.length > 0 ? additionalImages : undefined,
           min_order: prod.BoxInnerQuantity || undefined,
-          units_per_box: prod.BoxQuantity || undefined,
+          units_per_box: totalStock > 0 ? totalStock : undefined,
           box_weight: prod.BoxWeightKG || undefined,
           box_dimensions: prod.BoxSizeM || undefined,
           personalization_techniques: techniques.length > 0 ? techniques : undefined,
