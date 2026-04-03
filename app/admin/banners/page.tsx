@@ -76,10 +76,28 @@ export default function AdminBanners() {
     });
   }
 
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'banners');
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.url) updateField('image_url', data.url);
+    } catch { /* ignore */ }
+    setUploading(false);
+    e.target.value = '';
+  }
+
   function BannerForm({ onSubmit, submitLabel }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string }) {
     return (
       <form onSubmit={onSubmit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Titulo *</label>
             <input type="text" value={form.title} onChange={e => updateField('title', e.target.value)}
@@ -94,12 +112,23 @@ export default function AdminBanners() {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">URL da Imagem</label>
-          <input type="text" value={form.image_url} onChange={e => updateField('image_url', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            placeholder="https://... ou /images/banners/banner1.jpg" />
+          <label className="block text-xs font-medium text-gray-600 mb-1">Imagem do Banner</label>
+          <div className="flex gap-2 items-center">
+            <input type="text" value={form.image_url} onChange={e => updateField('image_url', e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              placeholder="Cole uma URL ou envie uma imagem" />
+            <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium ${uploading ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+              {uploading ? 'Enviando...' : 'Importar'}
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
+            </label>
+          </div>
+          {form.image_url && (
+            <div className="mt-2">
+              <img src={form.image_url} alt="Preview" className="h-20 rounded border border-gray-200 object-cover" />
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Link de Destino</label>
             <input type="text" value={form.link_url} onChange={e => updateField('link_url', e.target.value)}

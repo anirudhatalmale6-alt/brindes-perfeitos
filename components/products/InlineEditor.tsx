@@ -19,7 +19,7 @@ export default function InlineEditor({ productId, field, value, label, multiline
 
   useEffect(() => {
     // Check if admin cookie exists
-    setIsAdmin(document.cookie.includes('admin_token='));
+    setIsAdmin(document.cookie.includes('is_admin='));
   }, []);
 
   if (!isAdmin) return null;

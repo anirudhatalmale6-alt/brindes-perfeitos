@@ -12,7 +12,7 @@ export default function AdminBar({ productId, productName }: AdminBarProps) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    setIsAdmin(document.cookie.includes('admin_token='));
+    setIsAdmin(document.cookie.includes('is_admin='));
   }, []);
 
   if (!isAdmin) return null;
