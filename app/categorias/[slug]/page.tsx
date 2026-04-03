@@ -49,58 +49,24 @@ export default function CategoryPage() {
   const [selectedColor, setSelectedColor] = useState('');
   const [sort, setSort] = useState('');
   const [catId, setCatId] = useState<number | null>(null);
-  const [restoredFromCache, setRestoredFromCache] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
+  const productsRef = useRef(products);
+  productsRef.current = products;
+  const catIdRef = useRef(catId);
+  catIdRef.current = catId;
   const LIMIT = 48;
-  const cacheKey = `cat_${slug}`;
 
-  // Save scroll position when clicking a product link
+  // On mobile back navigation (pageshow/bfcache), force reload if products are empty
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      const link = (e.target as HTMLElement).closest('a[href*="/catalogo/"]');
-      if (link && products.length > 0) {
-        sessionStorage.setItem(`${cacheKey}_products`, JSON.stringify(products));
-        sessionStorage.setItem(`${cacheKey}_scroll`, String(window.scrollY));
-        sessionStorage.setItem(`${cacheKey}_page`, String(page));
-        sessionStorage.setItem(`${cacheKey}_total`, String(total));
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted && productsRef.current.length === 0 && catIdRef.current) {
+        // Page restored from bfcache with no products - force reload
+        window.location.reload();
       }
     }
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, [products, page, total, cacheKey]);
-
-  // Restore scroll position when returning from product page (on popstate / back button)
-  useEffect(() => {
-    function tryRestore() {
-      try {
-        const cached = sessionStorage.getItem(`${cacheKey}_products`);
-        const cachedScroll = sessionStorage.getItem(`${cacheKey}_scroll`);
-        const cachedPage = sessionStorage.getItem(`${cacheKey}_page`);
-        const cachedTotal = sessionStorage.getItem(`${cacheKey}_total`);
-        if (cached && cachedScroll) {
-          const parsed = JSON.parse(cached);
-          setProducts(parsed);
-          setPage(parseInt(cachedPage || '1'));
-          setTotal(parseInt(cachedTotal || '0'));
-          setHasMore(true);
-          setLoading(false);
-          setRestoredFromCache(true);
-          requestAnimationFrame(() => {
-            setTimeout(() => window.scrollTo(0, parseInt(cachedScroll)), 100);
-          });
-          sessionStorage.removeItem(`${cacheKey}_products`);
-          sessionStorage.removeItem(`${cacheKey}_scroll`);
-          sessionStorage.removeItem(`${cacheKey}_page`);
-          sessionStorage.removeItem(`${cacheKey}_total`);
-        }
-      } catch { /* ignore */ }
-    }
-    // Try restore on mount
-    tryRestore();
-    // Also listen for popstate (browser back/forward)
-    window.addEventListener('popstate', tryRestore);
-    return () => window.removeEventListener('popstate', tryRestore);
-  }, [cacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   // Load category info once
   useEffect(() => {
@@ -143,16 +109,15 @@ export default function CategoryPage() {
     if (append) setLoadingMore(false); else setLoading(false);
   }, [catId, selectedColor, sort]);
 
-  // Load first page (skip if restored from cache)
+  // Load first page
   useEffect(() => {
-    if (restoredFromCache) return;
     if (catId) loadProducts(1, false);
-  }, [loadProducts, catId, restoredFromCache]);
+  }, [loadProducts, catId]);
 
   // Load more pages
   useEffect(() => {
-    if (page > 1 && catId && !restoredFromCache) loadProducts(page, true);
-  }, [page, loadProducts, catId, restoredFromCache]);
+    if (page > 1 && catId) loadProducts(page, true);
+  }, [page, loadProducts, catId]);
 
   // Intersection observer for infinite scroll
   useEffect(() => {

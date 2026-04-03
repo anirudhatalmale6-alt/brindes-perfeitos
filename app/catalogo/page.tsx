@@ -36,54 +36,21 @@ function CatalogPage() {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [hasMore, setHasMore] = useState(true);
-  const [restoredFromCache, setRestoredFromCache] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
+  const productsRef = useRef(products);
+  productsRef.current = products;
   const LIMIT = 48;
 
-  // Save scroll position when clicking a product link
+  // On mobile back navigation (pageshow/bfcache), force reload if products are empty
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      const link = (e.target as HTMLElement).closest('a[href*="/catalogo/"]');
-      if (link && products.length > 0) {
-        sessionStorage.setItem('catalog_products', JSON.stringify(products));
-        sessionStorage.setItem('catalog_scroll', String(window.scrollY));
-        sessionStorage.setItem('catalog_page', String(page));
-        sessionStorage.setItem('catalog_total', String(total));
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted && productsRef.current.length === 0) {
+        window.location.reload();
       }
     }
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, [products, page, total]);
-
-  // Restore scroll position when returning from product page
-  useEffect(() => {
-    function tryRestore() {
-      if (searchParams.get('q')) return;
-      try {
-        const cached = sessionStorage.getItem('catalog_products');
-        const cachedScroll = sessionStorage.getItem('catalog_scroll');
-        const cachedPage = sessionStorage.getItem('catalog_page');
-        const cachedTotal = sessionStorage.getItem('catalog_total');
-        if (cached && cachedScroll) {
-          setProducts(JSON.parse(cached));
-          setPage(parseInt(cachedPage || '1'));
-          setTotal(parseInt(cachedTotal || '0'));
-          setLoading(false);
-          setRestoredFromCache(true);
-          requestAnimationFrame(() => {
-            setTimeout(() => window.scrollTo(0, parseInt(cachedScroll)), 100);
-          });
-          sessionStorage.removeItem('catalog_products');
-          sessionStorage.removeItem('catalog_scroll');
-          sessionStorage.removeItem('catalog_page');
-          sessionStorage.removeItem('catalog_total');
-        }
-      } catch { /* ignore */ }
-    }
-    tryRestore();
-    window.addEventListener('popstate', tryRestore);
-    return () => window.removeEventListener('popstate', tryRestore);
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -124,18 +91,17 @@ function CatalogPage() {
     fetch('/api/categories').then(r => r.json()).then(setCategories);
   }, []);
 
-  // Load first page when filters change (skip if restored from cache)
+  // Load first page when filters change
   useEffect(() => {
-    if (restoredFromCache) return;
     loadProducts(1, false);
-  }, [loadProducts, restoredFromCache]);
+  }, [loadProducts]);
 
   // Load more when page increases beyond 1
   useEffect(() => {
-    if (page > 1 && !restoredFromCache) {
+    if (page > 1) {
       loadProducts(page, true);
     }
-  }, [page, loadProducts, restoredFromCache]);
+  }, [page, loadProducts]);
 
   // Intersection observer for infinite scroll
   useEffect(() => {
