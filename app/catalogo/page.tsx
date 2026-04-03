@@ -39,7 +39,38 @@ function CatalogPage() {
   const observerRef = useRef<HTMLDivElement>(null);
   const productsRef = useRef(products);
   productsRef.current = products;
+  const restoreRef = useRef<{ scrollY: number; count: number } | null>(null);
   const LIMIT = 48;
+
+  // Check sessionStorage for scroll restore on mount
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('catalog_scroll');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.path === window.location.pathname + window.location.search) {
+          restoreRef.current = { scrollY: data.scrollY, count: data.count };
+        }
+        sessionStorage.removeItem('catalog_scroll');
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Save scroll position when clicking a product link
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const link = (e.target as HTMLElement).closest('a[href^="/catalogo/"]');
+      if (link) {
+        sessionStorage.setItem('catalog_scroll', JSON.stringify({
+          scrollY: window.scrollY,
+          count: productsRef.current.length,
+          path: window.location.pathname + window.location.search,
+        }));
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
   // On mobile back navigation (pageshow/bfcache), force reload if products are empty
   useEffect(() => {
@@ -68,8 +99,12 @@ function CatalogPage() {
   const loadProducts = useCallback(async (pageNum: number, append: boolean) => {
     if (append) setLoadingMore(true); else setLoading(true);
 
+    // If restoring scroll, load all previously loaded products at once
+    const restoring = pageNum === 1 && !append && restoreRef.current;
+    const loadLimit = restoring ? Math.max(LIMIT, restoreRef.current!.count) : LIMIT;
+
     const params = new URLSearchParams({
-      page: String(pageNum), limit: String(LIMIT), search: debouncedSearch, active: '1',
+      page: restoring ? '1' : String(pageNum), limit: String(loadLimit), search: debouncedSearch, active: '1',
       category: selectedCategory,
     });
     if (searchParams.get('featured') === '1') params.set('featured', '1');
@@ -83,7 +118,19 @@ function CatalogPage() {
       setProducts(data.products);
     }
     setTotal(data.total);
-    setHasMore(pageNum < data.totalPages);
+
+    if (restoring) {
+      const restoredPages = Math.ceil(loadLimit / LIMIT);
+      setPage(restoredPages);
+      setHasMore(restoredPages < data.totalPages);
+      const scrollTarget = restoreRef.current!.scrollY;
+      restoreRef.current = null;
+      requestAnimationFrame(() => {
+        setTimeout(() => window.scrollTo(0, scrollTarget), 150);
+      });
+    } else {
+      setHasMore(pageNum < data.totalPages);
+    }
     if (append) setLoadingMore(false); else setLoading(false);
   }, [debouncedSearch, selectedCategory, searchParams]);
 

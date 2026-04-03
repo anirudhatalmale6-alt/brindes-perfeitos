@@ -54,13 +54,43 @@ export default function CategoryPage() {
   productsRef.current = products;
   const catIdRef = useRef(catId);
   catIdRef.current = catId;
+  const restoreRef = useRef<{ scrollY: number; count: number } | null>(null);
   const LIMIT = 48;
+
+  // Check sessionStorage for scroll restore on mount
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('category_scroll');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.path === window.location.pathname) {
+          restoreRef.current = { scrollY: data.scrollY, count: data.count };
+        }
+        sessionStorage.removeItem('category_scroll');
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Save scroll position when clicking a product link
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const link = (e.target as HTMLElement).closest('a[href^="/catalogo/"]');
+      if (link) {
+        sessionStorage.setItem('category_scroll', JSON.stringify({
+          scrollY: window.scrollY,
+          count: productsRef.current.length,
+          path: window.location.pathname,
+        }));
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
   // On mobile back navigation (pageshow/bfcache), force reload if products are empty
   useEffect(() => {
     function handlePageShow(e: PageTransitionEvent) {
       if (e.persisted && productsRef.current.length === 0 && catIdRef.current) {
-        // Page restored from bfcache with no products - force reload
         window.location.reload();
       }
     }
@@ -92,7 +122,11 @@ export default function CategoryPage() {
     if (!catId) return;
     if (append) setLoadingMore(true); else setLoading(true);
 
-    const p = new URLSearchParams({ page: String(pageNum), limit: String(LIMIT), category: String(catId), active: '1' });
+    // If restoring scroll, load all previously loaded products at once
+    const restoring = pageNum === 1 && !append && restoreRef.current;
+    const loadLimit = restoring ? Math.max(LIMIT, restoreRef.current!.count) : LIMIT;
+
+    const p = new URLSearchParams({ page: restoring ? '1' : String(pageNum), limit: String(loadLimit), category: String(catId), active: '1' });
     if (selectedColor) p.set('color', selectedColor);
     if (sort) p.set('sort', sort);
 
@@ -105,7 +139,19 @@ export default function CategoryPage() {
       setProducts(data.products);
     }
     setTotal(data.total);
-    setHasMore(pageNum < data.totalPages);
+
+    if (restoring) {
+      const restoredPages = Math.ceil(loadLimit / LIMIT);
+      setPage(restoredPages);
+      setHasMore(restoredPages < data.totalPages);
+      const scrollTarget = restoreRef.current!.scrollY;
+      restoreRef.current = null;
+      requestAnimationFrame(() => {
+        setTimeout(() => window.scrollTo(0, scrollTarget), 150);
+      });
+    } else {
+      setHasMore(pageNum < data.totalPages);
+    }
     if (append) setLoadingMore(false); else setLoading(false);
   }, [catId, selectedColor, sort]);
 
