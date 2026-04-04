@@ -94,8 +94,9 @@ export abstract class BaseImporter {
         .filter(Boolean).join(' ');
       const autoShortDesc = data.short_description || seoDesc;
 
-      // SEO-friendly slug based on short description
-      const slug = slugify(seoDesc.length <= 80 ? seoDesc : `${cleanName} personalizado ${data.supplier_sku || ''}`);
+      // SEO-friendly slug: "name-personalizado-sku" (shorter than full description)
+      const slugBase = [cleanName, 'personalizado', data.supplier_sku || ''].filter(Boolean).join(' ');
+      const slug = slugify(slugBase.length <= 80 ? slugBase : `${cleanName.split(' ').slice(0, 4).join(' ')} personalizado ${data.supplier_sku || ''}`);
 
       // Use the product's actual category
 

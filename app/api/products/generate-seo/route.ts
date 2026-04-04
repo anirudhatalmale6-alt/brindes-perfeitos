@@ -22,29 +22,6 @@ function cleanProductName(name: string): string {
   return clean;
 }
 
-/**
- * Extracts capacity/size specs from a product name.
- * Matches patterns like "650ml", "500 ml", "16GB", "1000 mAh", "A5", "A4"
- */
-function extractSpecs(name: string): string {
-  const patterns = [
-    /(\d+(?:[.,]\d+)?\s*(?:ml|mL|ML|l|L|litro|litros))/gi,
-    /(\d+(?:[.,]\d+)?\s*(?:gb|GB|mb|MB|tb|TB))/gi,
-    /(\d+(?:[.,]\d+)?\s*(?:mAh|mah|MAH))/gi,
-    /(\d+(?:[.,]\d+)?\s*(?:cm|mm|m\b|pol|polegadas))/gi,
-    /(\d+(?:[.,]\d+)?(?:'|''|"|″)\s*\d*)/g,
-    /\b(A[3-6])\b/g,
-  ];
-
-  const found: string[] = [];
-  for (const pat of patterns) {
-    const matches = name.match(pat);
-    if (matches) found.push(...matches);
-  }
-
-  return found.length > 0 ? found[0].trim() : '';
-}
-
 export async function POST(request: NextRequest) {
   initializeDatabase();
   const db = getDb();
@@ -77,23 +54,23 @@ export async function POST(request: NextRequest) {
     for (const product of products) {
       const cleanName = cleanProductName(product.name);
       const sku = product.supplier_sku || '';
-      const specs = extractSpecs(product.name);
 
-      // Build short description: "Name Personalizado CODE Specs Brindes Perfeitos"
+      // Short description: "Name Personalizado CODE Brindes Perfeitos"
       const parts = [cleanName, 'Personalizado'];
       if (sku) parts.push(sku);
-      if (specs) parts.push(specs);
       parts.push('Brindes Perfeitos');
       const shortDesc = parts.join(' ');
 
       if (updateSlugs) {
-        // Build SEO-friendly slug from short description
-        let baseSlug = slugify(shortDesc);
+        // Slug: "name-personalizado-sku" (keep it short)
+        const slugParts = [cleanName, 'personalizado'];
+        if (sku) slugParts.push(sku);
+        let baseSlug = slugify(slugParts.join(' '));
         // Ensure slug isn't too long (max ~80 chars)
         if (baseSlug.length > 80) {
-          const shortParts = [cleanName, 'personalizado'];
-          if (sku) shortParts.push(sku);
-          baseSlug = slugify(shortParts.join(' '));
+          // Truncate the name part
+          const words = cleanName.split(' ').slice(0, 4).join(' ');
+          baseSlug = slugify([words, 'personalizado', sku].filter(Boolean).join(' '));
         }
 
         let finalSlug = baseSlug;
