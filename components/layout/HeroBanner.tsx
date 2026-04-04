@@ -73,6 +73,9 @@ export default function HeroBanner({ totalProducts }: HeroBannerProps) {
 
   const slide = slides[current];
 
+  // Check if this is an image-only banner (has image but no subtitle/cta)
+  const isImageOnly = slide.image_url && !slide.subtitle && !slide.cta_text;
+
   const content = (
     <>
       {/* Background */}
@@ -86,30 +89,32 @@ export default function HeroBanner({ totalProducts }: HeroBannerProps) {
         <div className="absolute inset-0 hero-gradient" />
       )}
 
-      {/* Overlay for text readability */}
-      <div className="absolute inset-0 bg-black/20" />
+      {/* Overlay - skip for image-only banners (pre-made banners like XBZ) */}
+      {!isImageOnly && <div className="absolute inset-0 bg-black/20" />}
 
-      {/* Content */}
-      <div className="relative h-full flex items-center">
-        <div className="max-w-7xl mx-auto px-4 w-full">
-          <div className="max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4 drop-shadow-lg">
-              {slide.title}
-            </h1>
-            {slide.subtitle && (
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-4 md:mb-6 drop-shadow max-w-xl">
-                {slide.subtitle}
-                {totalProducts && totalProducts > 0 ? ` Mais de ${totalProducts.toLocaleString('pt-BR')} produtos disponiveis.` : ''}
-              </p>
-            )}
-            {slide.cta_text && (
-              <span className="inline-block bg-amber-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg font-semibold hover:bg-amber-600 text-sm md:text-lg shadow-lg">
-                {slide.cta_text}
-              </span>
-            )}
+      {/* Content - skip for image-only banners */}
+      {!isImageOnly && (
+        <div className="relative h-full flex items-center">
+          <div className="max-w-7xl mx-auto px-4 w-full">
+            <div className="max-w-2xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4 drop-shadow-lg">
+                {slide.title}
+              </h1>
+              {slide.subtitle && (
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-4 md:mb-6 drop-shadow max-w-xl">
+                  {slide.subtitle}
+                  {totalProducts && totalProducts > 0 ? ` Mais de ${totalProducts.toLocaleString('pt-BR')} produtos disponiveis.` : ''}
+                </p>
+              )}
+              {slide.cta_text && (
+                <span className="inline-block bg-amber-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg font-semibold hover:bg-amber-600 text-sm md:text-lg shadow-lg">
+                  {slide.cta_text}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 

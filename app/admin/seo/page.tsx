@@ -121,6 +121,7 @@ export default function AdminSeo() {
   const [analysisResult, setAnalysisResult] = useState<{ score: number; checks: SeoCheck[] } | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkMsg, setBulkMsg] = useState('');
+  const [generatingAll, setGeneratingAll] = useState(false);
 
   async function loadEntries() {
     const res = await fetch('/api/seo');
@@ -220,6 +221,26 @@ export default function AdminSeo() {
     setTimeout(() => setBulkMsg(''), 3000);
   }
 
+  async function generateAllSeo() {
+    if (!confirm('Isso vai gerar descricoes curtas e URLs SEO para TODOS os produtos. Continuar?')) return;
+    setGeneratingAll(true);
+    setBulkMsg('Gerando descricoes e URLs SEO...');
+    try {
+      const res = await fetch('/api/products/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ update_slugs: true }),
+      });
+      const data = await res.json();
+      setBulkMsg(data.message || `SEO gerado para ${data.updated} produtos!`);
+      loadProducts();
+    } catch {
+      setBulkMsg('Erro ao gerar SEO');
+    }
+    setGeneratingAll(false);
+    setTimeout(() => setBulkMsg(''), 5000);
+  }
+
   function toggleSelect(id: number) {
     setSelected(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }
@@ -276,6 +297,10 @@ export default function AdminSeo() {
             <input type="text" value={prodSearch} onChange={e => setProdSearch(e.target.value)}
               placeholder="Buscar produto..." className="flex-1 min-w-[200px] px-3 py-2 border rounded-lg text-sm" />
             <button onClick={loadProducts} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">Buscar</button>
+            <button onClick={generateAllSeo} disabled={generatingAll}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+              {generatingAll ? 'Gerando...' : 'Gerar Descricoes e URLs SEO (Todos)'}
+            </button>
             {selected.size > 0 && (
               <button onClick={bulkApplyDescriptions}
                 className="px-4 py-2 bg-lime-600 text-white rounded-lg text-sm hover:bg-lime-700">

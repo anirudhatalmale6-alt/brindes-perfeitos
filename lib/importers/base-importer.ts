@@ -86,7 +86,16 @@ export abstract class BaseImporter {
       ).get(this.supplier, data.supplier_sku) as { id: number } | undefined;
 
       const categoryId = data.category_name ? this.findOrCreateCategory(data.category_name) : null;
-      const slug = slugify(data.name);
+
+      // Auto-generate SEO short description: "Name Personalizado CODE Brindes Perfeitos"
+      const cleanName = data.name.replace(/^\d+\.\s*/, '').toLowerCase()
+        .split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      const seoDesc = [cleanName, 'Personalizado', data.supplier_sku || '', 'Brindes Perfeitos']
+        .filter(Boolean).join(' ');
+      const autoShortDesc = data.short_description || seoDesc;
+
+      // SEO-friendly slug based on short description
+      const slug = slugify(seoDesc.length <= 80 ? seoDesc : `${cleanName} personalizado ${data.supplier_sku || ''}`);
 
       // Use the product's actual category
 
@@ -98,7 +107,7 @@ export abstract class BaseImporter {
           source_url = ?, price = ?, last_synced_at = datetime('now'), updated_at = datetime('now')
           WHERE id = ?
         `).run(
-          data.name, data.short_description || null, data.description || null, categoryId,
+          data.name, autoShortDesc, data.description || null, categoryId,
           data.specs ? JSON.stringify(data.specs) : null,
           data.colors ? JSON.stringify(data.colors) : null,
           data.color_stock ? JSON.stringify(data.color_stock) : null,
@@ -126,7 +135,7 @@ export abstract class BaseImporter {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'))
         `).run(
           this.supplier, data.supplier_sku, data.name, finalSlug,
-          data.short_description || null, data.description || null, categoryId,
+          autoShortDesc, data.description || null, categoryId,
           data.specs ? JSON.stringify(data.specs) : null,
           data.colors ? JSON.stringify(data.colors) : null,
           data.color_stock ? JSON.stringify(data.color_stock) : null,
