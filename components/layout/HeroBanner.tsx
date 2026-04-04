@@ -119,7 +119,7 @@ export default function HeroBanner({ totalProducts }: HeroBannerProps) {
   );
 
   return (
-    <section className={`relative w-full ${isImageOnly ? 'aspect-[3/1] max-h-[400px]' : 'h-[250px] sm:h-[300px] md:h-[400px] lg:h-[500px]'}`} style={isImageOnly ? { backgroundColor: '#f3f4f6' } : undefined}>
+    <section className="relative w-full h-[250px] sm:h-[300px] md:h-[400px] lg:h-[500px]" style={isImageOnly ? { backgroundColor: '#1a1a1a' } : undefined}>
       {slide.link_url ? (
         <Link href={slide.link_url} className="block absolute inset-0">
           {content}
