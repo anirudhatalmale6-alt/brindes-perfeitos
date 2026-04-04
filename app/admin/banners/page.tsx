@@ -9,11 +9,74 @@ interface Banner {
 
 const emptyForm = { title: '', subtitle: '', image_url: '', link_url: '', cta_text: '', sort_order: 0 };
 
+function BannerFormFields({ form, updateField, uploading, onUpload }: {
+  form: typeof emptyForm;
+  updateField: (key: string, value: string | number) => void;
+  uploading: boolean;
+  onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Titulo * <span className="text-gray-400 font-normal">(referencia interna)</span></label>
+          <input type="text" value={form.title} onChange={e => updateField('title', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" required
+            placeholder="Ex: Garrafa Termica XBZ" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Subtitulo <span className="text-gray-400 font-normal">(deixe vazio para banners prontos)</span></label>
+          <input type="text" value={form.subtitle} onChange={e => updateField('subtitle', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="Ex: Confira nossas canetas personalizadas" />
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Imagem do Banner</label>
+        <div className="flex gap-2 items-center">
+          <input type="text" value={form.image_url} onChange={e => updateField('image_url', e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="Cole uma URL ou envie uma imagem" />
+          <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium ${uploading ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+            {uploading ? 'Enviando...' : 'Importar'}
+            <input type="file" accept="image/*" onChange={onUpload} className="hidden" disabled={uploading} />
+          </label>
+        </div>
+        {form.image_url && (
+          <div className="mt-2">
+            <img src={form.image_url} alt="Preview" className="h-20 rounded border border-gray-200 object-cover" />
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Link de Destino</label>
+          <input type="text" value={form.link_url} onChange={e => updateField('link_url', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="/catalogo/caneta-xyz ou /categorias/canetas" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Texto do Botao <span className="text-gray-400 font-normal">(deixe vazio para banners prontos)</span></label>
+          <input type="text" value={form.cta_text} onChange={e => updateField('cta_text', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="Ex: Ver Produto" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Ordem</label>
+          <input type="number" value={form.sort_order} onChange={e => updateField('sort_order', parseInt(e.target.value) || 0)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminBanners() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [showAdd, setShowAdd] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   async function load() {
     const res = await fetch('/api/banners');
@@ -76,8 +139,6 @@ export default function AdminBanners() {
     });
   }
 
-  const [uploading, setUploading] = useState(false);
-
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -92,72 +153,6 @@ export default function AdminBanners() {
     } catch { /* ignore */ }
     setUploading(false);
     e.target.value = '';
-  }
-
-  function BannerForm({ onSubmit, submitLabel }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string }) {
-    return (
-      <form onSubmit={onSubmit} className="space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Titulo * <span className="text-gray-400 font-normal">(referencia interna - nao aparece em banners com imagem)</span></label>
-            <input type="text" value={form.title} onChange={e => updateField('title', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" required
-              placeholder="Ex: Garrafa Termica XBZ" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Subtitulo</label>
-            <input type="text" value={form.subtitle} onChange={e => updateField('subtitle', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              placeholder="Ex: Confira nossas canetas personalizadas" />
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Imagem do Banner</label>
-          <div className="flex gap-2 items-center">
-            <input type="text" value={form.image_url} onChange={e => updateField('image_url', e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              placeholder="Cole uma URL ou envie uma imagem" />
-            <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium ${uploading ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
-              {uploading ? 'Enviando...' : 'Importar'}
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
-            </label>
-          </div>
-          {form.image_url && (
-            <div className="mt-2">
-              <img src={form.image_url} alt="Preview" className="h-20 rounded border border-gray-200 object-cover" />
-            </div>
-          )}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Link de Destino</label>
-            <input type="text" value={form.link_url} onChange={e => updateField('link_url', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              placeholder="/catalogo/caneta-xyz ou /categorias/canetas" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Texto do Botao</label>
-            <input type="text" value={form.cta_text} onChange={e => updateField('cta_text', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              placeholder="Ex: Ver Produto" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Ordem</label>
-            <input type="number" value={form.sort_order} onChange={e => updateField('sort_order', parseInt(e.target.value) || 0)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button type="submit" className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 text-sm">
-            {submitLabel}
-          </button>
-          <button type="button" onClick={() => { setShowAdd(false); setEditing(null); }}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
-            Cancelar
-          </button>
-        </div>
-      </form>
-    );
   }
 
   return (
@@ -175,7 +170,18 @@ export default function AdminBanners() {
       {showAdd && (
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <h2 className="font-semibold text-gray-700 mb-3">Novo Banner</h2>
-          <BannerForm onSubmit={addBanner} submitLabel="Criar Banner" />
+          <form onSubmit={addBanner}>
+            <BannerFormFields form={form} updateField={updateField} uploading={uploading} onUpload={handleImageUpload} />
+            <div className="flex gap-2 mt-3">
+              <button type="submit" className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 text-sm">
+                Criar Banner
+              </button>
+              <button type="button" onClick={() => { setShowAdd(false); setForm(emptyForm); }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                Cancelar
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -190,7 +196,18 @@ export default function AdminBanners() {
               {editing === b.id ? (
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-700 mb-3">Editar Banner</h3>
-                  <BannerForm onSubmit={(e) => { e.preventDefault(); saveBanner(b.id); }} submitLabel="Salvar" />
+                  <form onSubmit={(e) => { e.preventDefault(); saveBanner(b.id); }}>
+                    <BannerFormFields form={form} updateField={updateField} uploading={uploading} onUpload={handleImageUpload} />
+                    <div className="flex gap-2 mt-3">
+                      <button type="submit" className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 text-sm">
+                        Salvar
+                      </button>
+                      <button type="button" onClick={() => { setEditing(null); }}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
                 </div>
               ) : (
                 <div className="flex items-stretch">

@@ -83,7 +83,7 @@ export default function HeroBanner({ totalProducts }: HeroBannerProps) {
         <img
           src={slide.image_url}
           alt={slide.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full ${isImageOnly ? 'object-contain' : 'object-cover'}`}
         />
       ) : (
         <div className="absolute inset-0 hero-gradient" />
@@ -119,7 +119,7 @@ export default function HeroBanner({ totalProducts }: HeroBannerProps) {
   );
 
   return (
-    <section className="relative w-full h-[250px] sm:h-[300px] md:h-[400px] lg:h-[500px]">
+    <section className={`relative w-full ${isImageOnly ? 'aspect-[3/1] max-h-[400px]' : 'h-[250px] sm:h-[300px] md:h-[400px] lg:h-[500px]'}`} style={isImageOnly ? { backgroundColor: '#f3f4f6' } : undefined}>
       {slide.link_url ? (
         <Link href={slide.link_url} className="block absolute inset-0">
           {content}
