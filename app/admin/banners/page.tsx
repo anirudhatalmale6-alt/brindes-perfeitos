@@ -99,10 +99,10 @@ export default function AdminBanners() {
       <form onSubmit={onSubmit} className="space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Titulo *</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Titulo * <span className="text-gray-400 font-normal">(referencia interna - nao aparece em banners com imagem)</span></label>
             <input type="text" value={form.title} onChange={e => updateField('title', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" required
-              placeholder="Ex: Canetas em Promocao" />
+              placeholder="Ex: Garrafa Termica XBZ" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Subtitulo</label>
@@ -234,11 +234,15 @@ export default function AdminBanners() {
         )}
       </div>
 
-      {banners.length > 0 && (
-        <p className="text-xs text-gray-400 mt-4">
-          Dica: banners com imagem aparecem em tela cheia. Sem imagem, usam o gradiente verde padrao. O banner inteiro e clicavel quando tem link de destino.
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+        <p className="text-xs text-blue-700 font-semibold mb-1">Dica para banners prontos (XBZ, SpotGifts):</p>
+        <p className="text-xs text-blue-600">
+          Para usar banners prontos dos fornecedores: preencha o Titulo (apenas referencia interna), importe a imagem, e deixe Subtitulo e Texto do Botao VAZIOS. Assim a imagem aparece limpa, sem texto sobreposto.
         </p>
-      )}
+        <p className="text-xs text-gray-500 mt-1">
+          Banners sem imagem usam o gradiente verde padrao. O banner inteiro e clicavel quando tem link de destino.
+        </p>
+      </div>
     </div>
   );
 }
